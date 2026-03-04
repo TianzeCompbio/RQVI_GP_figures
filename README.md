@@ -2,6 +2,14 @@
 
 Figures for the multi-panel comparison of **RQVI** (Randomized Quasi-Variational Inference) and **Flashier** gene program methods. RQVI learns sparse, interpretable gene programs from single-cell expression data via variational inference with randomized sparsity priors. This figure set evaluates RQVI against Flashier across scalability, sparsity, coverage, and per-program agreement.
 
+## Open items
+
+1. **Panel A detail level** - Current schematics (`RQVI_architecture.png`, `RQVI_training.png`) may be too detailed. Consider whether a more simplified/brief version is needed.
+
+2. **Panel B** - Time scalability plot is still running; not yet available.
+
+3. **Panel D-F pair selection** - Current pairs (GP 38 <-> F58, GP 45 <-> F35) have moderate correlations (cluster: 0.57 / 0.44, cell: 0.35 / 0.15) rather than sitting at the bottom of the distribution. Need to decide whether to keep these pairs or select pairs with lower correlation to better illustrate differences between the methods.
+
 ## Repository structure
 
 ```
@@ -13,6 +21,8 @@ figures_version_v2/
 ```
 
 ## Panel overview
+
+**Status key:** **Done** = finalized and reviewed; **Draft** = content exists but needs revision; **Running** = computation in progress, output not yet available.
 
 | Panel | Description | Script | Doc | Status |
 |-------|-------------|--------|-----|--------|
@@ -41,12 +51,12 @@ Every script (except `fig_panel_D_hist.py`, which reads only local CSVs) depends
 
 | Path | What | Used by |
 |------|------|---------|
-| `/data/tianzew/immgenT/david_final_10k_genes.h5ad` | Main dataset (obs metadata + expression) | `utils.py` → most scripts |
-| `/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss08_64by4GPs_seed{0-9}.h5ad` | RQVI cell loadings (seed 0 via `utils.py`; all 10 seeds for coverage scripts) | `fig_cross_method_similarity.py`, `fig_panel_D_F.py`, `fig_panel_E_pair1.py`, `fig_panel_F_pair2.py`, `fig_rqvi_flashier_coverage_cell_level.py` |
-| `/data/tianzew/immgenT/totalvi_20241006_mde.csv` | UMAP/MDE coordinates | `utils.py` → UMAP-based scripts |
-| `.../Evaluation/function_analysis/corr_rst/rqvi_seed{0-9}_gp_cell_level.csv` | RQVI cluster-level mean loadings (seed 0 via `utils.py`; all 10 seeds for cluster coverage) | `fig_cross_method_similarity.py`, `fig_gp_sparsity_scatter.py`, `fig_panel_D_F.py`, `fig_panel_E_pair1.py`, `fig_panel_F_pair2.py`, `fig_rqvi_flashier_coverage.py` |
-| `.../Evaluation/Subcluster/cell_factor_matrix.txt` | Flashier cell loadings (~2.7 GB) | `fig_cross_method_similarity.py`, `fig_panel_D_F.py`, `fig_panel_E_pair1.py`, `fig_panel_F_pair2.py`, `fig_rqvi_flashier_coverage.py`, `fig_rqvi_flashier_coverage_cell_level.py` |
-| `.../Evaluation/Subcluster/gene_factor_matrix.txt` | Flashier gene effects (~81 MB) | `fig_panel_D_F.py`, `fig_panel_E_pair1.py`, `fig_panel_F_pair2.py` |
+| `/data/tianzew/immgenT/david_final_10k_genes.h5ad` | Main dataset (obs metadata + expression) | Most scripts via `utils.py` |
+| `/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss08_64by4GPs_seed{0-9}.h5ad` | RQVI cell loadings (seed 0 via `utils.py`; all 10 seeds for coverage scripts) | Similarity, panel D-F, and coverage scripts |
+| `/data/tianzew/immgenT/totalvi_20241006_mde.csv` | UMAP/MDE coordinates | UMAP-based scripts via `utils.py` |
+| `.../Evaluation/function_analysis/corr_rst/rqvi_seed{0-9}_gp_cell_level.csv` | RQVI cluster-level mean loadings (seed 0 via `utils.py`; all 10 seeds for cluster coverage) | Similarity, sparsity, panel D-F, and coverage scripts |
+| `.../Evaluation/Subcluster/cell_factor_matrix.txt` | Flashier cell loadings (~2.7 GB) | Similarity, panel D-F, and all coverage scripts |
+| `.../Evaluation/Subcluster/gene_factor_matrix.txt` | Flashier gene effects (~81 MB) | Panel D-F scripts only |
 
 Full base path for `.../Evaluation/` entries: `/homes/gws/tianzew/projects/gene_program_model/Evaluation/`
 
@@ -91,10 +101,3 @@ python scripts/fig_rqvi_flashier_coverage_cell_level.py
 
 Refer to each panel's doc (linked above) for details on data inputs and parameters.
 
-## Open items / TODOs
-
-1. **Panel A detail level** - Current schematics (`RQVI_architecture.png`, `RQVI_training.png`) may be too detailed. Consider whether a more simplified/brief version is needed.
-
-2. **Panel B** - Time scalability plot is still running; not yet available.
-
-3. **Panel D-F pair selection** - Current pairs (GP 38 <-> F58, GP 45 <-> F35) have moderate correlations (cluster: 0.57 / 0.44, cell: 0.35 / 0.15) rather than sitting at the bottom of the distribution. Need to decide whether to keep these pairs or select pairs with lower correlation to better illustrate differences between the methods.
