@@ -72,3 +72,22 @@ Side-by-side comparison of 2 user-selected factor pairs between RQVI (seed 0) an
 ```bash
 uv run python figures_version_v2/scripts/fig_panel_D_F.py
 ```
+
+## Split figures
+
+Individual sub-panel scripts for standalone use in presentations/papers.
+Organized per-pair so each pair's UMAP + MD plots are grouped together:
+
+| Script | Content | Output |
+|--------|---------|--------|
+| `scripts/fig_panel_D_hist.py` | Similarity histograms (1×2) | `figures/panel_D_hist.pdf` |
+| `scripts/fig_panel_E_pair1.py` | GP38 vs F58: UMAP + MD (2×2) | `figures/panel_E_pair1.pdf` |
+| `scripts/fig_panel_F_pair2.py` | GP45 vs F35: UMAP + MD (2×2) | `figures/panel_F_pair2.pdf` |
+
+The histogram script reads pair correlations from `data/panel_D_F_pair_correlations.csv` (produced by the combined script), so run `fig_panel_D_F.py` at least once first.
+
+```bash
+uv run python figures_version_v2/scripts/fig_panel_D_hist.py
+uv run python figures_version_v2/scripts/fig_panel_E_pair1.py
+uv run python figures_version_v2/scripts/fig_panel_F_pair2.py
+```
