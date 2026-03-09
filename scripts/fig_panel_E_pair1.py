@@ -1,8 +1,8 @@
 """
-Panel E (GP38 vs F58): UMAP cell-loading maps + MD gene-effect plots for pair 1.
+Panel E (GP37 vs F32): UMAP cell-loading maps + MD gene-effect plots for pair 1.
 
-2×2 layout: top row = UMAP (RQVI GP38, Flashier F58),
-            bottom row = MD (RQVI GP38, Flashier F58).
+2×2 layout: top row = UMAP (RQVI GP37, Flashier F32),
+            bottom row = MD (RQVI GP37, Flashier F32).
 """
 
 import os
@@ -24,7 +24,7 @@ from utils import (
 )
 
 # ─── Config ───────────────────────────────────────────────────────────────────
-PAIR = {"rqvi_gp": 38, "flashier_factor": 58}
+PAIR = {"rqvi_gp": 37, "flashier_factor": 32}
 
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 PATH_FLASHIER_GENE = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/gene_factor_matrix.txt"
@@ -201,7 +201,7 @@ for sub_i, (method, effects_df, gp_key) in enumerate([
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
 
-fig.suptitle("GP38 vs F58", fontsize=12, fontweight="bold", y=1.02)
+fig.suptitle("GP37 vs F32", fontsize=12, fontweight="bold", y=1.02)
 fig.tight_layout()
 
 # ─── Save ─────────────────────────────────────────────────────────────────────

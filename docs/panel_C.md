@@ -8,14 +8,18 @@ Scatter plot of 256 GPs showing cell sparsity vs gene sparsity, colored by varia
 
 Read from `data/gp_summary_stats_seed0.csv`, column `frac_active` (cells with loading > 0.01). Displayed on a **log scale**; GP 207 (value = 0) is clipped to half the minimum positive value.
 
-### Y-axis — Proportion of activated genes
+### Y-axis — Number of active genes
 
-Computed via MAD-based outlier detection on each GP's gene effect column from `data/gp_effects_matrix_seed0.csv`. A gene is "activated" if its modified Z-score exceeds 3.5 in absolute value:
+The raw gene-effect matrix `W` (19,805 genes × 256 GPs) is min-max normalized to
+[-1, 1] using the global minimum and maximum across the entire matrix:
 
 ```
-z = (x - median) / (MAD * 1.4826)
-activated if |z| > 3.5
+W_scaled = 2 * (W - W.min()) / (W.max() - W.min()) - 1
 ```
+
+A gene is counted as "active" for a GP if `|W_scaled| > 0.45`. The threshold 0.45
+was selected by generating a 2×3 grid of scatter plots at thresholds 0.40–0.50
+(step 0.02) and choosing the value that best separated sparse vs. dense GPs.
 
 ### Color — % Variance Explained (PVE)
 
@@ -41,7 +45,7 @@ PVE_j = var_j / sum(var_j)
 ## Script & output
 
 - **Script:** `scripts/fig_gp_sparsity_scatter.py`
-- **Intermediate CSV:** `data/gp_sparsity_scatter_data.csv` (256 rows: `gp_idx`, `frac_active_cells`, `frac_active_genes`, `pve`)
+- **Intermediate CSV:** `data/gp_sparsity_scatter_data.csv` (256 rows: `gp_idx`, `frac_active_cells`, `n_active_genes`, `pve`)
 - **Output figure:** `figures/gp_sparsity_scatter.pdf`
 
 ## How to reproduce

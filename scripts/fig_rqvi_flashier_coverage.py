@@ -23,7 +23,7 @@ CORR_RST_DIR = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/functi
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 
 N_SEEDS = 10
-THRESHOLDS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+THRESHOLDS = [0.3, 0.4, 0.5, 0.6]
 
 # ─── Step 1: Compute Flashier cluster means ─────────────────────────────────
 print("Loading cell obs for cluster labels...")
@@ -113,8 +113,8 @@ for ti, thresh in enumerate(THRESHOLDS):
 print("Plotting...")
 fig, ax = plt.subplots(figsize=(6, 4))
 
-cmap = plt.cm.viridis
-colors = [cmap(i / (len(THRESHOLDS) - 1)) for i in range(len(THRESHOLDS))]
+cmap = plt.cm.Blues_r
+colors = [cmap(0.1 + 0.5 * i / (len(THRESHOLDS) - 1)) for i in range(len(THRESHOLDS))]
 
 x = np.arange(1, N_SEEDS + 1)
 
