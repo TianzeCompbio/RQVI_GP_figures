@@ -5,6 +5,7 @@ Shared utilities for GP overview figures (v2).
 import numpy as np
 import pandas as pd
 import scanpy as sc
+import matplotlib.patheffects as pe
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -86,3 +87,114 @@ def compute_level1_means(
         rows.append(pd.Series(weighted_mean, index=cluster_means.columns, name=level1))
 
     return pd.DataFrame(rows)
+
+
+# ─── MD scatter with de-crowded labels ──────────────────────────────────────
+
+def _vertical_dodge(ax, xs, ys, min_sep_px=12):
+    """Stack labels vertically so adjacent y-positions are >= min_sep_px apart."""
+    trans = ax.transData.transform
+    inv = ax.transData.inverted()
+    xy_px = trans(np.c_[xs, ys])
+    order = np.argsort(xy_px[:, 1])  # bottom -> top
+
+    y0_px = trans((0, ax.get_ylim()[0]))[1]
+    y1_px = trans((0, ax.get_ylim()[1]))[1]
+
+    for i, idx in enumerate(order):
+        if i == 0:
+            xy_px[idx, 1] = max(xy_px[idx, 1], y0_px + 2)
+        else:
+            prev = xy_px[order[i - 1], 1]
+            xy_px[idx, 1] = max(xy_px[idx, 1], prev + min_sep_px)
+        xy_px[idx, 1] = min(xy_px[idx, 1], y1_px - 2)
+
+    return inv.transform(xy_px)[:, 1]
+
+
+def _nearest_edge_anchor(ax, text_artist, x_point, y_point, pad_px=3):
+    """Return (x, y) in data coords on nearest edge of text bbox to point."""
+    fig = ax.figure
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+    bb = text_artist.get_window_extent(renderer=renderer)
+
+    candidates_px = [
+        (bb.x0 - pad_px, 0.5 * (bb.y0 + bb.y1)),  # left
+        (bb.x1 + pad_px, 0.5 * (bb.y0 + bb.y1)),  # right
+        (0.5 * (bb.x0 + bb.x1), bb.y0 - pad_px),  # bottom
+        (0.5 * (bb.x0 + bb.x1), bb.y1 + pad_px),  # top
+    ]
+
+    px, py = ax.transData.transform((x_point, y_point))
+    d2 = [(px - cx) ** 2 + (py - cy) ** 2 for (cx, cy) in candidates_px]
+    cx, cy = candidates_px[int(np.argmin(d2))]
+
+    return ax.transData.inverted().transform((cx, cy))
+
+
+def md_scatter(ax, gene_weights, mean_expr, title, top_k=30,
+               point_size_bg=8, point_size_hl=20, min_label_sep_px=12,
+               color_hl="#1f77b4", fontsize=5.5, x_offset_frac=0.02,
+               leader_gap_px=3):
+    """MD scatter with de-crowded gene labels on a given ax."""
+    df = pd.DataFrame({"x": gene_weights, "y": mean_expr}).dropna()
+
+    # Grey cloud
+    ax.scatter(df["x"], df["y"], s=point_size_bg, c="0.85", alpha=0.2,
+               linewidths=0, zorder=1)
+
+    # Top genes by absolute weight
+    top_genes = df["x"].abs().nlargest(top_k).index
+    hl = df.loc[top_genes].copy()
+    ax.scatter(hl["x"], hl["y"], s=point_size_hl, facecolors="none",
+               edgecolors=color_hl, linewidths=0.9, zorder=3)
+
+    # Build label positions with side-aware x-offset
+    x_span = ax.get_xlim()[1] - ax.get_xlim()[0]
+    x_off = x_offset_frac * x_span
+    hl["side_right"] = hl["x"] >= 0
+    hl["x_lab"] = np.where(hl["side_right"], hl["x"] + x_off, hl["x"] - x_off)
+    hl["y_lab"] = hl["y"].values.copy()
+
+    # Vertical dodge per side
+    right_mask = hl["side_right"].values
+    if right_mask.any():
+        hl.loc[right_mask, "y_lab"] = _vertical_dodge(
+            ax, hl.loc[right_mask, "x_lab"].values,
+            hl.loc[right_mask, "y_lab"].values,
+            min_sep_px=min_label_sep_px,
+        )
+    if (~right_mask).any():
+        hl.loc[~right_mask, "y_lab"] = _vertical_dodge(
+            ax, hl.loc[~right_mask, "x_lab"].values,
+            hl.loc[~right_mask, "y_lab"].values,
+            min_sep_px=min_label_sep_px,
+        )
+
+    # Draw text labels with white stroke
+    texts = {}
+    for g, r in hl.iterrows():
+        ha = "left" if r["side_right"] else "right"
+        t = ax.text(
+            r["x_lab"], r["y_lab"], g,
+            ha=ha, va="center", fontsize=fontsize, color=color_hl,
+            path_effects=[pe.withStroke(linewidth=2.0, foreground="white")],
+            zorder=5, clip_on=False,
+        )
+        texts[g] = t
+
+    # Leader lines from text edge to data point
+    for g, r in hl.iterrows():
+        t = texts[g]
+        sx, sy = _nearest_edge_anchor(ax, t, r["x"], r["y"], pad_px=leader_gap_px)
+        ax.annotate(
+            "", xy=(r["x"], r["y"]), xytext=(sx, sy),
+            arrowprops=dict(arrowstyle="-", lw=0.6, color=color_hl, alpha=0.7),
+            zorder=4,
+        )
+
+    ax.set_title(title, fontsize=9, fontweight="bold", loc="left")
+    ax.set_xlabel("Gene effect", fontsize=8)
+    for s in ("top", "right"):
+        ax.spines[s].set_visible(False)

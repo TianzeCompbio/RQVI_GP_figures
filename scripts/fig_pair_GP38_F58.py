@@ -18,8 +18,8 @@ import matplotlib.pyplot as plt
 import scanpy as sc
 from scipy import sparse
 from utils import (
-    load_main_obs, load_gene_effects,
-    FIG_DIR, PATH_MAIN_H5AD,
+    load_main_obs, load_gene_effects, md_scatter,
+    FIG_DIR, PATH_RQVI_H5AD, PATH_MAIN_H5AD,
     LEVEL1_ORDER,
 )
 
@@ -39,13 +39,17 @@ print("Loading Flashier cell loadings...")
 flashier_cell = pd.read_csv(PATH_FLASHIER_CELL, sep="\t", index_col=0)
 print(f"  Flashier cell matrix: {flashier_cell.shape}")
 
-print("Loading RQVI cell loadings + UMAP coords...")
-adata_rqvi = sc.read_h5ad(PATH_RQVI_UMAP_H5AD)
+print("Loading RQVI cell loadings...")
+adata_rqvi = sc.read_h5ad(PATH_RQVI_H5AD)
+
+print("Loading UMAP coordinates...")
+adata_umap = sc.read_h5ad(PATH_RQVI_UMAP_H5AD)
 
 # ─── Intersect cells ─────────────────────────────────────────────────────────
 common_all = (
     obs.index
     .intersection(pd.Index(adata_rqvi.obs_names))
+    .intersection(pd.Index(adata_umap.obs_names))
     .intersection(flashier_cell.index)
 )
 print(f"  Common cells across all sources: {len(common_all)}")
@@ -64,10 +68,12 @@ sampled_idx = np.array(sampled_idx)
 print(f"  Downsampled to {len(sampled_idx)} cells")
 
 # ─── Build subset AnnData for sc.pl.umap ────────────────────────────────────
-adata_sub = adata_rqvi[sampled_idx].copy()
+# Use UMAP coords from adata_umap, GP loadings from adata_rqvi
+adata_sub = adata_umap[sampled_idx].copy()
 
 gp = PAIR["rqvi_gp"]
-vals = adata_sub.X[:, gp]
+rqvi_idx = pd.Index(adata_rqvi.obs_names).get_indexer(sampled_idx)
+vals = adata_rqvi.X[rqvi_idx, gp]
 if hasattr(vals, 'toarray'):
     vals = vals.toarray().ravel()
 else:
@@ -77,7 +83,7 @@ adata_sub.obs[f"rqvi_gp{gp}"] = vals
 col = f"F{PAIR['flashier_factor']}"
 adata_sub.obs[f"flashier_{col}"] = flashier_cell.loc[sampled_idx, col].values
 
-del adata_rqvi, flashier_cell
+del adata_rqvi, adata_umap, flashier_cell
 gc.collect()
 
 # ─── Load gene effects for MD plots ─────────────────────────────────────────
@@ -131,11 +137,14 @@ col = f"F{PAIR['flashier_factor']}"
 
 # RQVI UMAP
 sc.pl.umap(adata_sub, color=f"rqvi_gp{gp}", ax=axes[0, 0],
-           show=False, title=f"RQVI GP {gp}", frameon=False)
+           show=False, title=f"RQVI GP {gp}", frameon=False, size=5)
 
-# Flashier UMAP
+# Flashier UMAP — vmax at 98th percentile for better visualization
+flashier_vals = adata_sub.obs[f"flashier_{col}"].values
+flashier_vmax = np.percentile(flashier_vals[flashier_vals > 0], 98) if (flashier_vals > 0).any() else 1.0
 sc.pl.umap(adata_sub, color=f"flashier_{col}", ax=axes[0, 1],
-           show=False, title=f"Flashier {col}", frameon=False)
+           show=False, title=f"Flashier {col}", frameon=False, size=5,
+           vmax=flashier_vmax)
 
 # --- Bottom row: MD plots ---
 for sub_i, (method, effects_df, gp_key) in enumerate([
@@ -144,40 +153,12 @@ for sub_i, (method, effects_df, gp_key) in enumerate([
 ]):
     ax = axes[1, sub_i]
     gene_weights = effects_df[gp_key]
-
-    df = pd.DataFrame({"x": gene_weights, "y": mean_expr}).dropna()
-
-    # Grey cloud
-    ax.scatter(df["x"], df["y"], s=8, c="0.85", alpha=0.2,
-               linewidths=0, zorder=1)
-
-    # Top 15 genes by absolute weight
-    top15 = df["x"].abs().nlargest(15).index
-    hl_df = df.loc[top15]
-    ax.scatter(hl_df["x"], hl_df["y"], s=20, facecolors="none",
-               edgecolors="#1f77b4", linewidths=0.9, zorder=3)
-
-    # Label top 8
-    top8 = hl_df["x"].abs().nlargest(8).index
-    for gene in top8:
-        ax.annotate(
-            gene, (hl_df.loc[gene, "x"], hl_df.loc[gene, "y"]),
-            fontsize=5.5, color="#1f77b4", alpha=0.9,
-            xytext=(3, 3), textcoords="offset points",
-        )
-
-    if method == "RQVI":
-        title = f"RQVI GP {PAIR['rqvi_gp']}"
-    else:
-        title = f"Flashier F{PAIR['flashier_factor']}"
-    ax.set_title(title, fontsize=9, fontweight="bold", loc="left")
-    ax.set_xlabel("Gene effect", fontsize=8)
+    title = f"RQVI GP {PAIR['rqvi_gp']}" if method == "RQVI" else f"Flashier F{PAIR['flashier_factor']}"
+    md_scatter(ax, gene_weights, mean_expr, title)
     if sub_i == 0:
         ax.set_ylabel("Mean log expr", fontsize=8)
     else:
         ax.set_ylabel("")
-    for s in ("top", "right"):
-        ax.spines[s].set_visible(False)
 
 fig.suptitle("GP 38 vs F58 (r = 0.573)", fontsize=12, fontweight="bold", y=1.02)
 fig.tight_layout()
