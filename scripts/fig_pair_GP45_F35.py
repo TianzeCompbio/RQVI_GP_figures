@@ -156,7 +156,7 @@ for sub_i, (method, effects_df, gp_key) in enumerate([
     title = f"RQVI GP {PAIR['rqvi_gp']}" if method == "RQVI" else f"Flashier F{PAIR['flashier_factor']}"
     md_scatter(ax, gene_weights, mean_expr, title)
     if sub_i == 0:
-        ax.set_ylabel("Mean log expr", fontsize=8)
+        ax.set_ylabel("Mean log expr", fontsize=11)
     else:
         ax.set_ylabel("")
 

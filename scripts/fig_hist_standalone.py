@@ -1,7 +1,7 @@
 """
-Standalone histogram: multi-seed best-match |Pearson r| distribution.
+Standalone histogram: multi-seed best-match signed Pearson r distribution.
 
-Computes inline with 10 RQVI seeds + absolute correlation, matching the
+Computes inline with 10 RQVI seeds + signed correlation (−1 to 1), matching the
 coverage figure from fig_representative_pairs.py. Marks GP38/F58 and GP45/F35.
 """
 
@@ -65,7 +65,7 @@ for s in range(N_SEEDS):
     F_z = (F_hist - F_hist.mean(axis=0, keepdims=True)) / (F_hist.std(axis=0, keepdims=True) + 1e-12)
     R_z = (R_hist - R_hist.mean(axis=0, keepdims=True)) / (R_hist.std(axis=0, keepdims=True) + 1e-12)
     corr_mat = (F_z.T @ R_z) / F_z.shape[0]
-    best_corr_per_seed[s] = np.max(np.abs(corr_mat), axis=1)
+    best_corr_per_seed[s] = np.max(corr_mat, axis=1)
 
 best_corr_all_seeds = np.max(best_corr_per_seed, axis=0)
 pct_covered = (best_corr_all_seeds >= 0.5).mean() * 100
@@ -109,9 +109,9 @@ ax.text(
     zorder=5,
 )
 
-ax.set_xlabel("Best-match |Pearson r| (cluster-level, 10 seeds)", fontsize=9)
+ax.set_xlabel("Best-match Pearson r (cluster-level, 10 seeds)", fontsize=9)
 ax.set_ylabel("Count (Flashier factors)", fontsize=9)
-ax.set_xlim(0, 1)
+ax.set_xlim(-1, 1)
 ax.legend(fontsize=7, loc="upper left")
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)

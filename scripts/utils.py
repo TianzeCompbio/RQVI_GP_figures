@@ -91,32 +91,94 @@ def compute_level1_means(
 
 # ─── MD scatter with de-crowded labels ──────────────────────────────────────
 
-def _vertical_dodge(ax, xs, ys, min_sep_px=12):
-    """Stack labels vertically so adjacent y-positions are >= min_sep_px apart."""
+def _vertical_dodge(ax, xs, ys, min_sep_px=14, max_shift_px=100):
+    """
+    Spread labels vertically so adjacent y-positions are at least
+    `min_sep_px` pixels apart using a two-pass greedy sweep.
+    Isolated labels stay near their data points; only crowded labels
+    get pushed apart.  Capped at `max_shift_px` from original.
+    Returns new y (data coords).
+    """
+    n = len(ys)
+    if n == 0:
+        return ys
     trans = ax.transData.transform
     inv = ax.transData.inverted()
     xy_px = trans(np.c_[xs, ys])
-    order = np.argsort(xy_px[:, 1])  # bottom -> top
+    orig_y_px = xy_px[:, 1].copy()
+    order = np.argsort(orig_y_px)  # bottom -> top
 
     y0_px = trans((0, ax.get_ylim()[0]))[1]
     y1_px = trans((0, ax.get_ylim()[1]))[1]
 
-    for i, idx in enumerate(order):
-        if i == 0:
-            xy_px[idx, 1] = max(xy_px[idx, 1], y0_px + 2)
-        else:
-            prev = xy_px[order[i - 1], 1]
-            xy_px[idx, 1] = max(xy_px[idx, 1], prev + min_sep_px)
-        xy_px[idx, 1] = min(xy_px[idx, 1], y1_px - 2)
+    # Work on a sorted copy of y positions
+    y_px = orig_y_px.copy()
 
+    # Forward pass (bottom → top): push labels up only when too close
+    for i in range(1, n):
+        cur, prev = order[i], order[i - 1]
+        if y_px[cur] - y_px[prev] < min_sep_px:
+            y_px[cur] = y_px[prev] + min_sep_px
+
+    # Backward pass (top → bottom): pull each label back toward its
+    # original position while respecting min_sep with the label above
+    for i in range(n - 2, -1, -1):
+        cur = order[i]
+        nxt = order[i + 1]
+        ceiling = y_px[nxt] - min_sep_px
+        floor = y_px[order[i - 1]] + min_sep_px if i > 0 else -np.inf
+        y_px[cur] = np.clip(orig_y_px[cur], floor, ceiling)
+
+    # Clamp to max_shift from original and plot bounds
+    y_px = np.clip(y_px, orig_y_px - max_shift_px, orig_y_px + max_shift_px)
+    y_px = np.clip(y_px, y0_px + 2, y1_px - 2)
+
+    xy_px[:, 1] = y_px
     return inv.transform(xy_px)[:, 1]
 
 
-def _nearest_edge_anchor(ax, text_artist, x_point, y_point, pad_px=3):
+def _multicolumn_dodge(ax, data_xs, data_ys, x_off_near, x_off_far,
+                       min_sep_px=12, max_shift_px=180):
+    """
+    Split labels into near/far columns by alternating sorted-y,
+    dodge each column independently.
+    Returns: is_near (bool[]), x_lab[], y_lab[]
+    """
+    n = len(data_xs)
+    if n == 0:
+        return np.array([], dtype=bool), np.array([]), np.array([])
+
+    order = np.argsort(data_ys)
+    is_near = np.zeros(n, dtype=bool)
+    is_near[order[0::2]] = True  # even-indexed (by sorted y) → near
+
+    x_lab = np.where(is_near, data_xs + x_off_near, data_xs + x_off_far)
+    y_lab = data_ys.copy()
+
+    near_mask = is_near
+    far_mask = ~is_near
+
+    if near_mask.any():
+        y_lab[near_mask] = _vertical_dodge(
+            ax, x_lab[near_mask], y_lab[near_mask],
+            min_sep_px=min_sep_px, max_shift_px=max_shift_px,
+        )
+    if far_mask.any():
+        y_lab[far_mask] = _vertical_dodge(
+            ax, x_lab[far_mask], y_lab[far_mask],
+            min_sep_px=min_sep_px, max_shift_px=max_shift_px,
+        )
+
+    return is_near, x_lab, y_lab
+
+
+def _nearest_edge_anchor(ax, text_artist, x_point, y_point, pad_px=3,
+                         renderer=None):
     """Return (x, y) in data coords on nearest edge of text bbox to point."""
-    fig = ax.figure
-    fig.canvas.draw()
-    renderer = fig.canvas.get_renderer()
+    if renderer is None:
+        fig = ax.figure
+        fig.canvas.draw()
+        renderer = fig.canvas.get_renderer()
     bb = text_artist.get_window_extent(renderer=renderer)
 
     candidates_px = [
@@ -133,11 +195,15 @@ def _nearest_edge_anchor(ax, text_artist, x_point, y_point, pad_px=3):
     return ax.transData.inverted().transform((cx, cy))
 
 
-def md_scatter(ax, gene_weights, mean_expr, title, top_k=30,
-               point_size_bg=8, point_size_hl=20, min_label_sep_px=12,
-               color_hl="#1f77b4", fontsize=5.5, x_offset_frac=0.02,
+def md_scatter(ax, gene_weights, mean_expr, title, top_k=50,
+               point_size_bg=8, point_size_hl=25, min_label_sep_px=12,
+               color_hl="#1f77b4", fontsize=7.0, x_offset_near_frac=0.04,
+               x_offset_far_frac=0.10, max_shift_px=180,
                leader_gap_px=3):
-    """MD scatter with de-crowded gene labels on a given ax."""
+    """MD scatter with de-crowded gene labels on a given ax.
+
+    Uses multi-column label placement when a side has >15 labels.
+    """
     df = pd.DataFrame({"x": gene_weights, "y": mean_expr}).dropna()
 
     # Grey cloud
@@ -148,53 +214,87 @@ def md_scatter(ax, gene_weights, mean_expr, title, top_k=30,
     top_genes = df["x"].abs().nlargest(top_k).index
     hl = df.loc[top_genes].copy()
     ax.scatter(hl["x"], hl["y"], s=point_size_hl, facecolors="none",
-               edgecolors=color_hl, linewidths=0.9, zorder=3)
+               edgecolors=color_hl, linewidths=1.2, zorder=3)
 
-    # Build label positions with side-aware x-offset
+    # Compute x-offsets in data coords
     x_span = ax.get_xlim()[1] - ax.get_xlim()[0]
-    x_off = x_offset_frac * x_span
+    x_off_near = x_offset_near_frac * x_span
+    x_off_far = x_offset_far_frac * x_span
+
     hl["side_right"] = hl["x"] >= 0
-    hl["x_lab"] = np.where(hl["side_right"], hl["x"] + x_off, hl["x"] - x_off)
+    hl["x_lab"] = hl["x"].values.copy()
     hl["y_lab"] = hl["y"].values.copy()
+    hl["is_near"] = True  # default: near column
 
-    # Vertical dodge per side
+    MULTICOLUMN_THRESHOLD = 15
+
+    # Dodge per side
     right_mask = hl["side_right"].values
-    if right_mask.any():
-        hl.loc[right_mask, "y_lab"] = _vertical_dodge(
-            ax, hl.loc[right_mask, "x_lab"].values,
-            hl.loc[right_mask, "y_lab"].values,
-            min_sep_px=min_label_sep_px,
-        )
-    if (~right_mask).any():
-        hl.loc[~right_mask, "y_lab"] = _vertical_dodge(
-            ax, hl.loc[~right_mask, "x_lab"].values,
-            hl.loc[~right_mask, "y_lab"].values,
-            min_sep_px=min_label_sep_px,
-        )
+    for side_right, mask in [(True, right_mask), (False, ~right_mask)]:
+        if not mask.any():
+            continue
+        side_idx = hl.index[mask]
+        n_side = mask.sum()
+        sign = 1.0 if side_right else -1.0
 
-    # Draw text labels with white stroke
+        if n_side > MULTICOLUMN_THRESHOLD:
+            is_near, x_lab, y_lab = _multicolumn_dodge(
+                ax,
+                hl.loc[side_idx, "x"].values,
+                hl.loc[side_idx, "y"].values,
+                sign * x_off_near,
+                sign * x_off_far,
+                min_sep_px=min_label_sep_px,
+                max_shift_px=max_shift_px,
+            )
+            hl.loc[side_idx, "x_lab"] = x_lab
+            hl.loc[side_idx, "y_lab"] = y_lab
+            hl.loc[side_idx, "is_near"] = is_near
+        else:
+            hl.loc[side_idx, "x_lab"] = hl.loc[side_idx, "x"] + sign * x_off_near
+            hl.loc[side_idx, "y_lab"] = _vertical_dodge(
+                ax,
+                hl.loc[side_idx, "x_lab"].values,
+                hl.loc[side_idx, "y_lab"].values,
+                min_sep_px=min_label_sep_px,
+                max_shift_px=max_shift_px,
+            )
+
+    # Draw text labels with white stroke — differentiated near/far styling
     texts = {}
     for g, r in hl.iterrows():
         ha = "left" if r["side_right"] else "right"
+        near = r["is_near"]
+        fs = fontsize if near else fontsize * 0.94  # 5.0 vs ~4.7
+        zord = 5 if near else 4.5
         t = ax.text(
             r["x_lab"], r["y_lab"], g,
-            ha=ha, va="center", fontsize=fontsize, color=color_hl,
-            path_effects=[pe.withStroke(linewidth=2.0, foreground="white")],
-            zorder=5, clip_on=False,
+            ha=ha, va="center", fontsize=fs, color=color_hl,
+            path_effects=[pe.withStroke(linewidth=1.5, foreground="white")],
+            zorder=zord, clip_on=False,
         )
         texts[g] = t
 
-    # Leader lines from text edge to data point
+    # Single draw for all text artists, then compute leader lines
+    fig = ax.figure
+    fig.canvas.draw()
+    renderer = fig.canvas.get_renderer()
+
     for g, r in hl.iterrows():
         t = texts[g]
-        sx, sy = _nearest_edge_anchor(ax, t, r["x"], r["y"], pad_px=leader_gap_px)
+        near = r["is_near"]
+        lw = 0.5 if near else 0.4
+        alpha = 0.6 if near else 0.45
+        sx, sy = _nearest_edge_anchor(ax, t, r["x"], r["y"],
+                                       pad_px=leader_gap_px, renderer=renderer)
         ax.annotate(
             "", xy=(r["x"], r["y"]), xytext=(sx, sy),
-            arrowprops=dict(arrowstyle="-", lw=0.6, color=color_hl, alpha=0.7),
+            arrowprops=dict(arrowstyle="-", lw=lw, color=color_hl, alpha=alpha),
             zorder=4,
         )
 
     ax.set_title(title, fontsize=9, fontweight="bold", loc="left")
-    ax.set_xlabel("Gene effect", fontsize=8)
+    ax.set_xlabel("Gene effect", fontsize=11)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
+    ax.margins(x=0.05)
