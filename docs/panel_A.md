@@ -25,8 +25,7 @@ Inference procedure producing two output matrices:
 
 | File | Description |
 |------|-------------|
-| `figures/RQVI_architecture.png` | Model architecture schematic |
-| `figures/RQVI_training.png` | Post-training inference schematic |
+| `figures/RQVI_figure_method.pdf` | Combined method schematic (architecture + inference) |
 
 ## How to reproduce
 

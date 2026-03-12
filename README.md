@@ -2,12 +2,6 @@
 
 Figures for the multi-panel comparison of **RQVI** (Randomized Quasi-Variational Inference) and **Flashier** gene program methods. RQVI learns sparse, interpretable gene programs from single-cell expression data via variational inference with randomized sparsity priors. This figure set evaluates RQVI against Flashier across scalability, sparsity, coverage, and per-program agreement.
 
-## Open items
-
-1. **Panel A detail level** - Current schematics (`RQVI_architecture.png`, `RQVI_training.png`) may be too detailed. Consider whether a more simplified/brief version is needed.
-
-2. **Panel D-F pair selection** - Current pairs (GP 38 <-> F58, GP 45 <-> F35) have moderate correlations (cluster: 0.57 / 0.44, cell: 0.35 / 0.15) rather than sitting at the bottom of the distribution. Need to decide whether to keep these pairs or select pairs with lower correlation to better illustrate differences between the methods.
-
 ## Repository structure
 
 ```
@@ -20,20 +14,15 @@ figures_version_v2/
 
 ## Panel overview
 
-**Status key:** **Done** = finalized and reviewed; **Draft** = content exists but needs revision; **Running** = computation in progress, output not yet available.
-
-| Panel | Description | Script | Doc | Status |
-|-------|-------------|--------|-----|--------|
-| A | RQVI architecture & inference schematics | — (manual) | [`docs/panel_A.md`](docs/panel_A.md) | Draft |
-| B | Time scalability plot | `fig_scalability.py` | [`docs/panel_B.md`](docs/panel_B.md) | Done |
-| C | GP sparsity scatter | `fig_gp_sparsity_scatter.py` | [`docs/panel_C.md`](docs/panel_C.md) | Done |
-| D-F | RQVI vs Flashier pair comparison (combined) | `fig_panel_D_F.py` | [`docs/panel_D_F.md`](docs/panel_D_F.md) | Done |
-| D | Similarity histograms (split) | `fig_panel_D_hist.py` | [`docs/panel_D_F.md`](docs/panel_D_F.md) | Done |
-| E | GP38 vs F58: UMAP + MD (split) | `fig_panel_E_pair1.py` | [`docs/panel_D_F.md`](docs/panel_D_F.md) | Done |
-| F | GP45 vs F35: UMAP + MD (split) | `fig_panel_F_pair2.py` | [`docs/panel_D_F.md`](docs/panel_D_F.md) | Done |
-| Sup B | Flashier coverage (cluster-level) | `fig_rqvi_flashier_coverage.py` | [`docs/panel_Sup_B.md`](docs/panel_Sup_B.md) | Done |
-| Sup B v2 | Flashier coverage (cell-level) | `fig_rqvi_flashier_coverage_cell_level.py` | [`docs/panel_Sup_B_v2.md`](docs/panel_Sup_B_v2.md) | Done |
-| (ref) | Cross-method similarity + intermediate CSVs | `fig_cross_method_similarity.py` | — | Done |
+| Panel | Description | Script | Output | Doc |
+|-------|-------------|--------|--------|-----|
+| A | RQVI method schematic | — (manual) | `figures/RQVI_figure_method.pdf` | [`docs/panel_A.md`](docs/panel_A.md) |
+| B | Time scalability plot | `fig_scalability.py` | `figures/scalability.pdf` | [`docs/panel_B.md`](docs/panel_B.md) |
+| C | GP sparsity scatter | `fig_gp_sparsity_scatter.py` | `figures/gp_sparsity_scatter.pdf` | [`docs/panel_C.md`](docs/panel_C.md) |
+| D | Best-match signed Pearson r histogram | `fig_hist_standalone.py` | `figures/hist_standalone.pdf` | [`docs/panel_D.md`](docs/panel_D.md) |
+| E | GP 38 vs F58 pair comparison (r=0.573) | `fig_pair_GP38_F58.py` | `figures/pair_GP38_F58.pdf` | [`docs/panel_E.md`](docs/panel_E.md) |
+| F | GP 45 vs F35 pair comparison (r=0.436) | `fig_pair_GP45_F35.py` | `figures/pair_GP45_F35.pdf` | [`docs/panel_F.md`](docs/panel_F.md) |
+| Sup B | Flashier coverage (cluster-level) | `fig_rqvi_flashier_coverage.py` | `figures/rqvi_flashier_coverage.pdf` | [`docs/panel_Sup_B.md`](docs/panel_Sup_B.md) |
 
 Additional reference material: [`docs/for_reference_panel_D_to_F.md`](docs/for_reference_panel_D_to_F.md)
 
@@ -45,57 +34,35 @@ Additional reference material: [`docs/for_reference_panel_D_to_F.md`](docs/for_r
 
 ### External data
 
-Every script (except `fig_panel_D_hist.py`, which reads only local CSVs) depends on large external files. Verify access before running.
+Every script depends on large external files. Verify access before running.
 
 | Path | What | Used by |
 |------|------|---------|
-| `/data/tianzew/immgenT/david_final_10k_genes.h5ad` | Main dataset (obs metadata + expression) | Most scripts via `utils.py` |
-| `/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss08_64by4GPs_seed{0-9}.h5ad` | RQVI cell loadings (seed 0 via `utils.py`; all 10 seeds for coverage scripts) | Similarity, panel D-F, and coverage scripts |
-| `/data/tianzew/immgenT/totalvi_20241006_mde.csv` | UMAP/MDE coordinates | UMAP-based scripts via `utils.py` |
-| `.../Evaluation/function_analysis/corr_rst/rqvi_seed{0-9}_gp_cell_level.csv` | RQVI cluster-level mean loadings (seed 0 via `utils.py`; all 10 seeds for cluster coverage) | Similarity, sparsity, panel D-F, and coverage scripts |
-| `.../Evaluation/Subcluster/cell_factor_matrix.txt` | Flashier cell loadings (~2.7 GB) | Similarity, panel D-F, and all coverage scripts |
-| `.../Evaluation/Subcluster/gene_factor_matrix.txt` | Flashier gene effects (~81 MB) | Panel D-F scripts only |
+| `/data/tianzew/immgenT/david_final_10k_genes.h5ad` | Main dataset (obs metadata + expression) | All scripts via `utils.py` |
+| `/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss08_64by4GPs_seed{0-9}.h5ad` | RQVI cell loadings (seed 0 via `utils.py`; all 10 seeds for panel D) | Panels D, E, F, Sup B |
+| `/data/tianzew/immgenT/RQVI/cmtloss08_64by4GPs_mde_totalVI.h5ad` | UMAP coordinates for pair plots | Panels E, F |
+| `/data/tianzew/immgenT/totalvi_20241006_mde.csv` | MDE coordinates | `utils.py` |
+| `.../Evaluation/function_analysis/corr_rst/rqvi_seed{0-9}_gp_cell_level.csv` | RQVI cluster-level mean loadings (all 10 seeds) | Panels C, D, Sup B |
+| `.../Evaluation/Subcluster/cell_factor_matrix.txt` | Flashier cell loadings (~2.7 GB) | Panels D, E, F, Sup B |
+| `.../Evaluation/Subcluster/gene_factor_matrix.txt` | Flashier gene effects (~81 MB) | Panels E, F |
 
 Full base path for `.../Evaluation/` entries: `/homes/gws/tianzew/projects/gene_program_model/Evaluation/`
 
 ### Execution order
 
-Some scripts produce intermediate CSVs that downstream scripts depend on. Run them in this order:
-
-```
-fig_cross_method_similarity.py  →  data/cross_method_best_corr.csv
-                                   data/cross_method_best_corr_cell_level.csv
-        ↓
-fig_panel_D_F.py                →  data/panel_D_F_pair_correlations.csv
-        ↓
-fig_panel_D_hist.py                (reads all 3 CSVs above)
-fig_panel_E_pair1.py               (independent — can run in any order)
-fig_panel_F_pair2.py               (independent — can run in any order)
-```
-
-All other scripts (`fig_gp_sparsity_scatter.py`, `fig_scalability.py`, `fig_rqvi_flashier_coverage.py`, `fig_rqvi_flashier_coverage_cell_level.py`) are independent and can run in any order. Note that `fig_scalability.py` depends on `data/scalability_benchmark.csv`, which is generated by `benchmark_scalability.py` (requires GPU).
+All 6 scripts are independent and can run in any order. Note that `fig_scalability.py` depends on `data/scalability_benchmark.csv`, which is generated by `benchmark_scalability.py` (requires GPU).
 
 ### Running
 
-Each panel has its own script in `scripts/`. For example:
+Each panel has its own script in `scripts/`. All scripts are independent:
 
 ```bash
-# Step 1: Generate cross-method correlation CSVs (required by panels D-F)
-python scripts/fig_cross_method_similarity.py
-
-# Step 2: Panels D-F combined (generates pair correlation CSV)
-python scripts/fig_panel_D_F.py
-
-# Step 3: Panels D-F individual split panels (depend on CSVs from steps 1-2)
-python scripts/fig_panel_D_hist.py   # -> figures/panel_D_hist.pdf
-python scripts/fig_panel_E_pair1.py  # -> figures/panel_E_pair1.pdf
-python scripts/fig_panel_F_pair2.py  # -> figures/panel_F_pair2.pdf
-
-# Independent scripts (no ordering constraints)
-python scripts/fig_gp_sparsity_scatter.py
-python scripts/fig_rqvi_flashier_coverage.py
-python scripts/fig_rqvi_flashier_coverage_cell_level.py
+python scripts/fig_scalability.py              # -> figures/scalability.pdf
+python scripts/fig_gp_sparsity_scatter.py      # -> figures/gp_sparsity_scatter.pdf
+python scripts/fig_hist_standalone.py           # -> figures/hist_standalone.pdf
+python scripts/fig_pair_GP38_F58.py            # -> figures/pair_GP38_F58.pdf
+python scripts/fig_pair_GP45_F35.py            # -> figures/pair_GP45_F35.pdf
+python scripts/fig_rqvi_flashier_coverage.py   # -> figures/rqvi_flashier_coverage.pdf
 ```
 
 Refer to each panel's doc (linked above) for details on data inputs and parameters.
-
