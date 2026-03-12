@@ -1,10 +1,10 @@
-# Panel F — GP 45 vs Flashier F35 Pair Comparison
+# GP 38 vs Flashier F58 Pair Comparison
 
-2x2 standalone figure comparing RQVI GP 45 to Flashier F35 (best-match r=0.436, below the 0.5 threshold).
+2x2 standalone figure comparing RQVI GP 38 to Flashier F58 (best-match r=0.573, above the 0.5 threshold).
 
 ## Layout
 
-- **Top row:** UMAP cell loading plots (RQVI GP 45 left, Flashier F35 right), colored by loading magnitude
+- **Top row:** UMAP cell loading plots (RQVI GP 38 left, Flashier F58 right), colored by loading magnitude
 - **Bottom row:** MD (mean-expression vs. gene-effect) scatter plots for the same pair, showing gene-level effect sizes against mean log expression
 
 ## Inputs
@@ -21,12 +21,12 @@ RQVI gene effects are loaded via `utils.load_gene_effects()`.
 
 ## Script
 
-`scripts/fig_pair_GP45_F35.py` -> `figures/pair_GP45_F35.pdf`
+`scripts/fig_pair_GP38_F58.py` -> `figures/pair_GP38_F58.pdf`
 
 ## How to reproduce
 
 ```bash
-python scripts/fig_pair_GP45_F35.py
+python scripts/fig_pair_GP38_F58.py
 ```
 
 No upstream dependencies — all data is loaded directly from external files.

@@ -1,4 +1,4 @@
-# Panel C — GP Sparsity Scatter Plot
+# GP Sparsity Scatter Plot
 
 Scatter plot of 256 GPs showing cell sparsity vs gene sparsity, colored by variance explained.
 

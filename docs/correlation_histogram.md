@@ -1,4 +1,4 @@
-# Panel D — Best-Match Signed Pearson r Histogram
+# Best-Match Signed Pearson r Histogram
 
 Multi-seed best-match signed Pearson r distribution across all 200 Flashier factors, using 10 RQVI seeds.
 

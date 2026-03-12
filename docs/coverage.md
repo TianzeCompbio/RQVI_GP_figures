@@ -1,4 +1,4 @@
-# Panel Sup B — RQVI Coverage of Flashier GPs
+# RQVI Coverage of Flashier GPs
 
 Line plot showing the fraction of Flashier GPs covered as RQVI seeds are added greedily, across 9 correlation thresholds.
 

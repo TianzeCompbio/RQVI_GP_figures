@@ -1,4 +1,4 @@
-# Panel B — RQVI Training Scalability
+# RQVI Training Scalability
 
 Training time vs. number of cells benchmark, demonstrating near-linear scalability of RQVI training.
 

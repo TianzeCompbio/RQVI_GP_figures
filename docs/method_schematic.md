@@ -1,4 +1,4 @@
-# Panel A — RQVI Architecture & Inference
+# RQVI Architecture & Inference
 
 Two schematic diagrams illustrating the Residual-Quantized Variational Inference (RQVI) model architecture and its post-training inference procedure.
 

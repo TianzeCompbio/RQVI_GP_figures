@@ -6,25 +6,23 @@ Figures for the multi-panel comparison of **RQVI** (Randomized Quasi-Variational
 
 ```
 figures_version_v2/
-├── docs/           # Per-panel documentation
+├── docs/           # Per-figure documentation
 ├── scripts/        # Figure-generation scripts + utils.py
 ├── figures/        # Output PDFs and schematic PNGs
 └── data/           # Intermediate CSVs and input data
 ```
 
-## Panel overview
+## Figure overview
 
-| Panel | Description | Script | Output | Doc |
-|-------|-------------|--------|--------|-----|
-| A | RQVI method schematic | — (manual) | `figures/RQVI_figure_method.pdf` | [`docs/panel_A.md`](docs/panel_A.md) |
-| B | Time scalability plot | `fig_scalability.py` | `figures/scalability.pdf` | [`docs/panel_B.md`](docs/panel_B.md) |
-| C | GP sparsity scatter | `fig_gp_sparsity_scatter.py` | `figures/gp_sparsity_scatter.pdf` | [`docs/panel_C.md`](docs/panel_C.md) |
-| D | Best-match signed Pearson r histogram | `fig_hist_standalone.py` | `figures/hist_standalone.pdf` | [`docs/panel_D.md`](docs/panel_D.md) |
-| E | GP 38 vs F58 pair comparison (r=0.573) | `fig_pair_GP38_F58.py` | `figures/pair_GP38_F58.pdf` | [`docs/panel_E.md`](docs/panel_E.md) |
-| F | GP 45 vs F35 pair comparison (r=0.436) | `fig_pair_GP45_F35.py` | `figures/pair_GP45_F35.pdf` | [`docs/panel_F.md`](docs/panel_F.md) |
-| Sup B | Flashier coverage (cluster-level) | `fig_rqvi_flashier_coverage.py` | `figures/rqvi_flashier_coverage.pdf` | [`docs/panel_Sup_B.md`](docs/panel_Sup_B.md) |
-
-Additional reference material: [`docs/for_reference_panel_D_to_F.md`](docs/for_reference_panel_D_to_F.md)
+| Figure | Description | Script | Output | Doc |
+|--------|-------------|--------|--------|-----|
+| Method schematic | RQVI architecture & inference | — (manual) | `figures/RQVI_figure_method.pdf` | [`docs/method_schematic.md`](docs/method_schematic.md) |
+| Scalability | Training time vs dataset size | `fig_scalability.py` | `figures/scalability.pdf` | [`docs/scalability.md`](docs/scalability.md) |
+| Sparsity scatter | Cell sparsity vs gene sparsity | `fig_gp_sparsity_scatter.py` | `figures/gp_sparsity_scatter.pdf` | [`docs/sparsity_scatter.md`](docs/sparsity_scatter.md) |
+| Correlation histogram | Best-match signed Pearson r distribution | `fig_hist_standalone.py` | `figures/hist_standalone.pdf` | [`docs/correlation_histogram.md`](docs/correlation_histogram.md) |
+| Pair GP38 vs F58 | UMAP + MD comparison (r=0.573) | `fig_pair_GP38_F58.py` | `figures/pair_GP38_F58.pdf` | [`docs/pair_GP38_F58.md`](docs/pair_GP38_F58.md) |
+| Pair GP45 vs F35 | UMAP + MD comparison (r=0.436) | `fig_pair_GP45_F35.py` | `figures/pair_GP45_F35.pdf` | [`docs/pair_GP45_F35.md`](docs/pair_GP45_F35.md) |
+| Coverage | Flashier GP coverage vs RQVI seeds | `fig_rqvi_flashier_coverage.py` | `figures/rqvi_flashier_coverage.pdf` | [`docs/coverage.md`](docs/coverage.md) |
 
 ## How to reproduce
 
@@ -39,12 +37,12 @@ Every script depends on large external files. Verify access before running.
 | Path | What | Used by |
 |------|------|---------|
 | `/data/tianzew/immgenT/david_final_10k_genes.h5ad` | Main dataset (obs metadata + expression) | All scripts via `utils.py` |
-| `/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss08_64by4GPs_seed{0-9}.h5ad` | RQVI cell loadings (seed 0 via `utils.py`; all 10 seeds for panel D) | Panels D, E, F, Sup B |
-| `/data/tianzew/immgenT/RQVI/cmtloss08_64by4GPs_mde_totalVI.h5ad` | UMAP coordinates for pair plots | Panels E, F |
+| `/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss08_64by4GPs_seed{0-9}.h5ad` | RQVI cell loadings (seed 0 via `utils.py`; all 10 seeds for correlation histogram) | Correlation histogram, pair scripts, coverage |
+| `/data/tianzew/immgenT/RQVI/cmtloss08_64by4GPs_mde_totalVI.h5ad` | UMAP coordinates for pair plots | Pair GP38 vs F58, pair GP45 vs F35 |
 | `/data/tianzew/immgenT/totalvi_20241006_mde.csv` | MDE coordinates | `utils.py` |
-| `.../Evaluation/function_analysis/corr_rst/rqvi_seed{0-9}_gp_cell_level.csv` | RQVI cluster-level mean loadings (all 10 seeds) | Panels C, D, Sup B |
-| `.../Evaluation/Subcluster/cell_factor_matrix.txt` | Flashier cell loadings (~2.7 GB) | Panels D, E, F, Sup B |
-| `.../Evaluation/Subcluster/gene_factor_matrix.txt` | Flashier gene effects (~81 MB) | Panels E, F |
+| `.../Evaluation/function_analysis/corr_rst/rqvi_seed{0-9}_gp_cell_level.csv` | RQVI cluster-level mean loadings (all 10 seeds) | Sparsity scatter, correlation histogram, coverage |
+| `.../Evaluation/Subcluster/cell_factor_matrix.txt` | Flashier cell loadings (~2.7 GB) | Correlation histogram, pair scripts, coverage |
+| `.../Evaluation/Subcluster/gene_factor_matrix.txt` | Flashier gene effects (~81 MB) | Pair GP38 vs F58, pair GP45 vs F35 |
 
 Full base path for `.../Evaluation/` entries: `/homes/gws/tianzew/projects/gene_program_model/Evaluation/`
 
@@ -54,7 +52,7 @@ All 6 scripts are independent and can run in any order. Note that `fig_scalabili
 
 ### Running
 
-Each panel has its own script in `scripts/`. All scripts are independent:
+Each figure has its own script in `scripts/`. All scripts are independent:
 
 ```bash
 python scripts/fig_scalability.py              # -> figures/scalability.pdf
@@ -65,4 +63,4 @@ python scripts/fig_pair_GP45_F35.py            # -> figures/pair_GP45_F35.pdf
 python scripts/fig_rqvi_flashier_coverage.py   # -> figures/rqvi_flashier_coverage.pdf
 ```
 
-Refer to each panel's doc (linked above) for details on data inputs and parameters.
+Refer to each figure's doc (linked above) for details on data inputs and parameters.
