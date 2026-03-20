@@ -160,7 +160,6 @@ for sub_i, (method, effects_df, gp_key) in enumerate([
     else:
         ax.set_ylabel("")
 
-fig.suptitle("GP 45 vs F35 (r = 0.436)", fontsize=12, fontweight="bold", y=1.02)
 fig.tight_layout()
 
 # ─── Save ─────────────────────────────────────────────────────────────────────

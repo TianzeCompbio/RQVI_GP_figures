@@ -19,11 +19,6 @@ from utils import load_main_obs, FIG_DIR, PROJECT_DIR, CLUSTER_COL
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 CORR_RST_DIR = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/function_analysis/corr_rst"
 
-# Pairs to mark on the histogram
-MARKED_PAIRS = [
-    {"rqvi_gp": 38, "flashier_factor": "F58", "best_corr": 0.573, "label": "GP 38 vs F58"},
-    {"rqvi_gp": 45, "flashier_factor": "F35", "best_corr": 0.436, "label": "GP 45 vs F35"},
-]
 
 # ─── Step 1: Load metadata & Flashier cluster means ─────────────────────────
 print("Loading metadata...")
@@ -76,43 +71,14 @@ del rqvi_cluster_means_list
 print("Plotting histogram...")
 fig, ax = plt.subplots(1, 1, figsize=(6, 4))
 
-# Shade r>=0.5 region
-ax.axvspan(0.5, 1.0, color="#d4edda", alpha=0.5, zorder=0,
-           label="r \u2265 0.5 region")
-
 # Histogram
 ax.hist(best_corr_all_seeds, bins=30,
         color="#4C72B0", edgecolor="white", linewidth=0.5, alpha=0.7,
         zorder=2)
 
-# Mark the two pairs
-colors = ["#4daf4a", "#377eb8"]
-for i, p in enumerate(MARKED_PAIRS):
-    ax.axvline(
-        p["best_corr"], color=colors[i], linestyle="--", linewidth=1.5,
-        label=f"{p['label']} (r={p['best_corr']:.2f})",
-        zorder=3,
-    )
-
-# r=0.5 threshold line
-ax.axvline(0.5, color="black", linestyle="-", linewidth=1.5, zorder=4)
-
-# Annotation
-ylim = ax.get_ylim()
-ax.text(
-    0.75, ylim[1] * 0.85,
-    f"{pct_covered:.0f}% of Flashier GPs\ncovered (10 seeds)",
-    fontsize=9, fontweight="bold", ha="center", va="top",
-    color="#2d6a2e",
-    bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="#2d6a2e",
-              alpha=0.8),
-    zorder=5,
-)
-
-ax.set_xlabel("Best-match Pearson r (cluster-level, 10 seeds)", fontsize=9)
+ax.set_xlabel("Best-match Pearson r with RQVI", fontsize=9)
 ax.set_ylabel("Count (Flashier factors)", fontsize=9)
 ax.set_xlim(-1, 1)
-ax.legend(fontsize=7, loc="upper left")
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
