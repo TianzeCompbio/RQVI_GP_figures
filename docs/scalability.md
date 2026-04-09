@@ -1,6 +1,12 @@
 # RQVI Training Scalability
 
+> **Sup figure panel a.** Demonstrates that RQVI is fast enough to run multiple seeds on the full ImmgenT dataset, which is what powers the multi-seed-robustness story in panels c (best-match) and d (coverage). See the panel-level storyline in [`internal_report.md`](internal_report.md).
+
 Training time vs. number of cells benchmark, demonstrating near-linear scalability of RQVI training.
+
+## Key comparator
+
+**Flashier takes ~1 week to train on the same ~600k-cell ImmgenT dataset.** RQVI takes ~35 minutes for 633k cells (see "Key results" below). The orders-of-magnitude speed gap is the load-bearing fact for the rest of the supplementary figure: it is what makes 10-seed runs feasible, which is what panels c (`fig_rqvi_best_match_4factors.py`, multi-seed search for the best RQVI match per Flashier factor) and d (`fig_rqvi_flashier_coverage.py`, greedy seed accumulation curve) both depend on.
 
 ## Design
 

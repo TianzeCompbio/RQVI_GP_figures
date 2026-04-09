@@ -1,5 +1,7 @@
 # Best-Match Signed Pearson r Histogram
 
+> **Main figure — best-match Pearson r distribution.** Quantitative companion to panel b (cell-level Flashier × RQVI similarity heatmap, TBD); the GP45/F35 vertical line in this histogram identifies the worst-r pair that anchors panels c-f. See the panel-level storyline in [`internal_report.md`](internal_report.md).
+
 Multi-seed best-match signed Pearson r distribution across all 200 Flashier factors, using 10 RQVI seeds.
 
 ## Description

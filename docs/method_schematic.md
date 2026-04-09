@@ -1,5 +1,7 @@
 # RQVI Architecture & Inference
 
+> **Main figure panel a.** Hand-drawn schematic that introduces the RQVI model and its post-training inference procedure. Sets up the two output matrices (cell × GP loadings and GP × gene effects) used in every other panel. See the panel-level storyline in [`internal_report.md`](internal_report.md).
+
 Two schematic diagrams illustrating the Residual-Quantized Variational Inference (RQVI) model architecture and its post-training inference procedure.
 
 ## Sub-panels

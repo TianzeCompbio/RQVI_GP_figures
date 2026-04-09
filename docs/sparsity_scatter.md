@@ -1,5 +1,7 @@
 # GP Sparsity Scatter Plot
 
+> **Sup figure panel b.** Empirical evidence that most RQVI GPs are sparse in *both* dimensions (cells and genes) and that PVE spans several orders of magnitude. Supports the sparsity language in §Figure 1 of the paper draft. See the panel-level storyline in [`internal_report.md`](internal_report.md).
+
 Scatter plot of 256 GPs showing cell sparsity vs gene sparsity, colored by variance explained.
 
 ## Axes & color encoding
@@ -21,6 +23,8 @@ A gene is counted as "active" for a GP if `|W_scaled| > 0.45`. The threshold 0.4
 was selected by generating a 2×3 grid of scatter plots at thresholds 0.40–0.50
 (step 0.02) and choosing the value that best separated sparse vs. dense GPs.
 
+> **Caveat:** 0.45 is a **heuristic** chosen visually on the same data, not a statistical cutoff. If reviewers ask, the simplest sensitivity analysis is to regenerate the same scatter at a few neighbouring thresholds (0.40, 0.45, 0.50) and confirm the qualitative shape is unchanged.
+
 ### Color — % Variance Explained (PVE)
 
 Computed as:
@@ -33,6 +37,8 @@ PVE_j = var_j / sum(var_j)
 - Cell loadings `X` come from the h5ad file
 - Gene effects `W` come from the CSV
 - Colorbar uses log scale (`LogNorm`)
+
+> **Important clarification:** PVE here is the **fraction of total reconstructed variance attributable to each GP** — the 256 PVE values sum to 1. It is *not* the fraction of the dataset's total variance. A reader who sees "low PVE" should not interpret it as "this GP explains very little of the data"; it means "this GP contributes a small fraction of the total RQVI reconstruction", which is consistent with rare-cell programs that are still biologically interpretable (e.g. GP1 baseline housekeeping).
 
 ## Input data
 
