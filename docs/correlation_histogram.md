@@ -1,17 +1,12 @@
 # Best-Match Signed Pearson r Histogram
 
-> **Main figure — best-match Pearson r distribution.** Quantitative companion to panel b (cell-level Flashier × RQVI similarity heatmap, TBD); the GP45/F35 vertical line in this histogram identifies the worst-r pair that anchors panels c-f. See the panel-level storyline in [`internal_report.md`](internal_report.md).
+> **Main figure — best-match Pearson r distribution.** Quantitative companion to panel b (cell-level Flashier × RQVI similarity heatmap, TBD), summarising how well RQVI matches Flashier across all 200 Flashier factors. See the panel-level storyline in [`figures_summary.md`](figures_summary.md).
 
-Multi-seed best-match signed Pearson r distribution across all 200 Flashier factors, using 10 RQVI seeds.
+Multi-seed best-match signed Pearson r distribution across all 200 Flashier factors, using 10 RQVI seeds. A plain histogram — no shaded region, no vertical pair markers.
 
 ## Description
 
 For each of the 200 Flashier factors, the script computes the cluster-level Z-scored Pearson r against every RQVI GP across all 10 seeds. The best (maximum positive) correlation per Flashier factor across all seeds is retained. The resulting distribution is plotted as a histogram spanning r from -1 to 1.
-
-Key features:
-- Green shaded region marks r >= 0.5 ("covered" factors)
-- Vertical dashed lines mark the two highlighted pairs: GP 38 vs F58 (r=0.573) and GP 45 vs F35 (r=0.436)
-- Annotation shows the percentage of Flashier factors covered at the r >= 0.5 threshold
 
 ## Inputs
 

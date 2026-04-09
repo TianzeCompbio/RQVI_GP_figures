@@ -1,6 +1,6 @@
 # RQVI Coverage of Flashier GPs
 
-> **Sup figure panel d.** Cumulative coverage curve answering "how many RQVI seeds do we need to capture the Flashier factorization?". See the panel-level storyline in [`internal_report.md`](internal_report.md).
+> **Sup figure panel d.** Cumulative coverage curve answering "how many RQVI seeds do we need to capture the Flashier factorization?". See the panel-level storyline in [`figures_summary.md`](figures_summary.md).
 
 Line plot showing the fraction of Flashier GPs covered as RQVI seeds are added greedily, across four correlation thresholds. Because seeds are added one at a time via greedy set-cover and a Flashier factor stays covered the moment any selected seed clears the threshold, the coverage curve is **monotone non-decreasing** — i.e. it is a **cumulative coverage** plot.
 

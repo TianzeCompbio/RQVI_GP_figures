@@ -1,6 +1,6 @@
 # GP Sparsity Scatter Plot
 
-> **Sup figure panel b.** Empirical evidence that most RQVI GPs are sparse in *both* dimensions (cells and genes) and that PVE spans several orders of magnitude. Supports the sparsity language in §Figure 1 of the paper draft. See the panel-level storyline in [`internal_report.md`](internal_report.md).
+> **Sup figure panel b.** Empirical evidence that most RQVI GPs are sparse in *both* dimensions (cells and genes) and that PVE spans several orders of magnitude. Supports the sparsity language in §Figure 1 of the paper draft. See the panel-level storyline in [`figures_summary.md`](figures_summary.md).
 
 Scatter plot of 256 GPs showing cell sparsity vs gene sparsity, colored by variance explained.
 

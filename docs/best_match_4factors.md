@@ -1,6 +1,6 @@
 # Best-Matched RQVI GPs for Four Flashier Factors
 
-> **Sup figure panel c.** RQVI's best-of-10-seeds matches for four lineage-marking Flashier factors (F22, F30, F58, F68). The panel echoes draft figure 2D and supports the claim that RQVI captures the same lineage-specific biology as Flashier. See the panel-level storyline in [`internal_report.md`](internal_report.md).
+> **Sup figure panel c.** RQVI's best-of-10-seeds matches for **the four lineage-specific gene programs from Flashier's published figure 2** (F22, F30, F58, F68). The panel demonstrates that RQVI recovers each of Flashier's four canonical lineage GPs at high cross-method correlation (Pearson r ≈ 0.81–0.90 after multi-seed search). See the panel-level storyline in [`figures_summary.md`](figures_summary.md).
 
 ## Layout
 
@@ -45,11 +45,9 @@ The metric is positive Pearson r (not `|r|`); the script uses `np.argmax(corrs)`
 
 ## Why these four Flashier factors?
 
-The four were hand-picked as **lineage-marking factors** so that the panel echoes the lineage-specific GP discussion in draft figure 2D. The exact biological identity of each Flashier factor is **not yet documented in this repo** — to fill that in we need the lead genes from `gene_factor_matrix.txt` (~81 MB external file).
+These are **the four lineage-specific gene programs from Flashier's published figure 2** — i.e. the canonical Flashier-discovered lineage GPs. The panel pivots on Flashier and asks: "for each of Flashier's four lineage-defining GPs, does RQVI find a comparable program?". The answer is yes, with Pearson r in the 0.81–0.90 range after multi-seed search.
 
-> **Action items:**
-> 1. Read the top-loaded genes for F22, F30, F58, F68 from `gene_factor_matrix.txt` and record the implied T-cell lineage (Treg / CD4 / CD8 / gdT / DN / etc.) for each.
-> 2. Decide whether the panel should keep its current Flashier-pivot (showing that RQVI catches Flashier's lineages) or be inverted to pivot on the *RQVI* canonical lineage GPs (GP68/22/29/27/30/8 etc.) and show each one's best Flashier match.
+The lead genes for each of F22, F30, F58, F68 can be read from `gene_factor_matrix.txt` (~81 MB external file).
 
 ## Inputs
 

@@ -1,6 +1,6 @@
 # RQVI Training Scalability
 
-> **Sup figure panel a.** Demonstrates that RQVI is fast enough to run multiple seeds on the full ImmgenT dataset, which is what powers the multi-seed-robustness story in panels c (best-match) and d (coverage). See the panel-level storyline in [`internal_report.md`](internal_report.md).
+> **Sup figure panel a.** Demonstrates that RQVI is fast enough to run multiple seeds on the full ImmgenT dataset, which is what powers the multi-seed-robustness story in panels c (best-match) and d (coverage). See the panel-level storyline in [`figures_summary.md`](figures_summary.md).
 
 Training time vs. number of cells benchmark, demonstrating near-linear scalability of RQVI training.
 

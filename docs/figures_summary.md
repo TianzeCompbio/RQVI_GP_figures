@@ -31,13 +31,11 @@ The rhetorical centerpiece of the main figure is the **GP45 / F35 case study** (
 
 **Panel a — RQVI architecture & inference schematic.** Hand-drawn schematic of the residual-quantized VAE: scVI encoder → N residual codebooks (coarse-to-fine GP decomposition) → quantized latent → scVI decoder. Bottom of the schematic shows the post-training inference that produces the two output matrices used everywhere downstream: a cell × GP loading matrix (distance-based softmax over codebook entries) and a GP × gene effect matrix (differential decoder log-expression with vs without each codebook contribution). See [`method_schematic.md`](method_schematic.md).
 
-**Panel b — cell-level Flashier × RQVI similarity heatmap.** *Not yet generated.* Intended to show, at single-cell resolution, that for each Flashier factor there is an RQVI GP with strongly correlated loadings, and vice versa. This is the headline visual for the convergent-discovery claim. **Action item:** generate this panel.
+**Panel b — cell-level Flashier × RQVI similarity heatmap.** *Not yet generated.* Intended to show, at single-cell resolution, that for each Flashier factor there is an RQVI GP with strongly correlated loadings, and vice versa. This is the headline visual for the convergent-discovery claim.
 
-**Histogram — best-match Pearson r distribution.** For each of the 200 Flashier factors, we take the maximum positive cluster-level Pearson r against any RQVI GP across all 10 seeds. The resulting distribution is plotted. Most Flashier factors are matched at r ≥ 0.5 (the green-shaded region in the figure); the percentage covered is annotated. Two pairs are marked with vertical dashed lines: GP38/F58 (r = 0.573, above threshold) and GP45/F35 (r = 0.436, below threshold). The histogram is the quantitative companion to panel b. See [`correlation_histogram.md`](correlation_histogram.md).
+**Histogram — best-match Pearson r distribution.** For each of the 200 Flashier factors, we take the maximum positive cluster-level Pearson r against any RQVI GP across all 10 seeds. The resulting distribution is plotted as a plain histogram spanning r from -1 to 1 — no shaded "covered" region, no vertical pair markers. The figure is purely the shape of the distribution; the take-away is that the bulk of Flashier factors sit at high positive r against their best RQVI match, supporting the convergent-discovery claim. The histogram is the quantitative companion to panel b. See [`correlation_histogram.md`](correlation_histogram.md).
 
 **Panels c, d, e, f — GP45 / F35 case study.** This is a 2 × 2 figure: top row is UMAP cell-loading plots for RQVI GP 45 (left) and Flashier F35 (right); bottom row is MD scatter plots (mean log expression vs gene effect) for the same pair, with the top-loaded genes labelled. **The pair was selected as the worst-matched best pair in the histogram.** The point of the panel is *not* that RQVI and Flashier agree on this pair by Pearson r — they explicitly do not (r = 0.436, below the 0.5 threshold). The point is that the *biology* converges anyway: both GP45 and F35 are TCR-activation programs, the lead genes labelled in the MD scatters overlap, and the UMAP loadings highlight the same activated-T-cell populations. This makes a stronger version of the convergent-discovery claim from panel b / the histogram. See [`pair_GP45_F35.md`](pair_GP45_F35.md).
-
-> **Note for action item:** the r = 0.436 value currently lives only in the filename and the doc — it is **not annotated on the PDF**. Recommend adding it as a subtitle on the main panel so the reader sees the number that justifies calling this the worst pair.
 
 ---
 
@@ -54,7 +52,7 @@ The rhetorical centerpiece of the main figure is the **GP45 / F35 case study** (
 
 **Panel b — Sparsity scatter.** One dot per RQVI GP (256 total), with x = proportion of active cells (cells with loading > 0.01, log scale), y = number of active genes (genes with `|W_scaled| > 0.45` after global min-max scaling), colour = % variance explained on a log scale. The scatter shows two things at once: (i) most GPs are sparse in *both* dimensions — they live in a small fraction of cells and are composed of a small fraction of the transcriptome; (ii) PVE spans several orders of magnitude, and low-PVE GPs are not noise — they typically capture programs active in rare cell populations and are still biologically interpretable. This is the empirical justification for the sparsity language in §Figure 1 of the paper draft. See [`sparsity_scatter.md`](sparsity_scatter.md).
 
-**Panel c — Best-match RQVI GPs for four Flashier factors (echoes draft figure 2D).** For four Flashier factors (F22, F30, F58, F68), the script searches across all 10 RQVI seeds for the GP with the highest cluster-level Z-scored Pearson r. Top row shows UMAP loadings of the chosen RQVI GP; bottom row shows the MD scatter with top-loaded genes labelled. The actual matches (across 10 seeds) are:
+**Panel c — Best-match RQVI GPs for the four lineage-specific Flashier factors.** F22, F30, F58, F68 are **the four lineage-specific gene programs from Flashier's published figure 2** — i.e. they are the canonical Flashier-discovered lineage GPs. For each one the script searches across all 10 RQVI seeds for the RQVI GP with the highest cluster-level Z-scored Pearson r. Top row shows UMAP loadings of the chosen RQVI GP; bottom row shows the MD scatter with top-loaded genes labelled. The actual matches (across 10 seeds) are:
 
 | Flashier | Best RQVI GP | Seed | Pearson r |
 | --- | --- | --- | --- |
@@ -63,7 +61,7 @@ The rhetorical centerpiece of the main figure is the **GP45 / F35 case study** (
 | F58 | GP 110 | 1 | 0.840 |
 | F68 | GP 76 | 3 | 0.840 |
 
-The four Flashier factors were hand-picked as lineage-marking factors so that the panel echoes the lineage-specific GPs in draft figure 2D — i.e. the claim is "RQVI also recovers the lineage-specific biology that Flashier finds, and after multi-seed search the agreement is strong (r ≈ 0.81–0.90)." Crucially, the multi-seed search lifts the correlations substantially above what any single RQVI seed achieves (the seed-0 numbers in `data/cross_method_best_corr.csv` are F22→GP16 r=0.70, F30→GP120 r=0.58, F58→GP166 r=0.73, F68→GP116 r=0.83 — uniformly lower than the best-of-10-seeds matches in the figure). This is exactly the speed → multi-seed → robustness chain that connects panels a, c, and d. See [`best_match_4factors.md`](best_match_4factors.md).
+The claim is straightforward: RQVI recovers each of Flashier's four canonical lineage GPs, with cross-method Pearson r in the 0.81–0.90 range after multi-seed search. Crucially, the multi-seed search lifts the correlations substantially above what any single RQVI seed achieves (the seed-0 numbers in `data/cross_method_best_corr.csv` are F22→GP16 r=0.70, F30→GP120 r=0.58, F58→GP166 r=0.73, F68→GP116 r=0.83 — uniformly lower than the best-of-10-seeds matches in the figure). This is exactly the speed → multi-seed → robustness chain that connects panels a, c, and d. See [`best_match_4factors.md`](best_match_4factors.md).
 
 **Panel d — Coverage of Flashier factors as RQVI seeds accumulate.** X-axis is the number of RQVI seeds (1–10); y-axis is the fraction of the 200 Flashier factors that are "covered" by the union of selected seeds, where a Flashier factor counts as covered the moment any selected RQVI seed has best-match `|r| ≥ threshold`. Seeds are added one at a time via greedy set-cover (at each step, the seed that maximises the union coverage is appended). The four coloured lines correspond to four r-thresholds (`THRESHOLDS = [0.3, 0.4, 0.5, 0.6]` in the live script). Because of the greedy set-cover construction, the curve is **monotone non-decreasing — i.e. cumulative coverage**. The take-away is how quickly the curve saturates: if 3–4 seeds are enough to cover most Flashier factors at r ≥ 0.5, that supports the multi-seed-robustness claim and answers "why we run RQVI 10 times". See [`coverage.md`](coverage.md).
 
@@ -80,7 +78,7 @@ The four Flashier factors were hand-picked as lineage-marking factors so that th
 
 See [`sparsity_scatter.md`](sparsity_scatter.md) for full methodology.
 
-### Q2 — Is GP45 / F35 a good match? The r value isn't shown and visually they don't look matched.
+### Q2 — Is GP45 / F35 a good match (r value isn't shown and visually they don't look matched)
 
 **No, by raw Pearson r the pair is not a good match — and that is the entire point of the panel.** Cluster-level r = 0.436, below the 0.5 "covered" threshold, sitting in the left tail of the histogram. We deliberately chose the *worst-matched best pair* as the case study because the panel is meant to support a stronger claim than the histogram on its own:
 
@@ -88,17 +86,13 @@ See [`sparsity_scatter.md`](sparsity_scatter.md) for full methodology.
 
 If you only look at r, the pair looks like a method failure. If you look at the lead genes and the UMAP, it looks like a methodological win — Flashier and RQVI are recovering the same biology through slightly different parameterizations of the same programmes. That asymmetry is why the panel exists.
 
-> **Action item:** the r = 0.436 number currently lives only in the filename and the methodology doc — it is **not annotated on the PDF itself**. Add it as a subtitle / annotation in `scripts/fig_pair_GP45_F35.py` so a reader of the figure sees the number that justifies the claim. Same goes for naming the lead genes that overlap; the MD scatters label the top 50 genes already, so the user can pick a few in the caption text.
-
 See [`pair_GP45_F35.md`](pair_GP45_F35.md) for full methodology.
 
 ### Q3 — The best-4-match panel doesn't contain the "usual suspects" we always see. Why?
 
-Two clarifications:
+**It does — the four Flashier factors plotted in this panel (F22, F30, F58, F68) are exactly the four lineage-specific gene programs from Flashier's published figure 2.** They are the "usual suspects" *on the Flashier side*. The whole point of the panel is to show that RQVI also recovers these four canonical Flashier-discovered lineage GPs.
 
-**(a) F-numbers and GP-numbers are different namespaces.** The "usual suspect" gene programs called out in the paper draft (GP68 for Treg, GP22 for DN, GP29 for CD8aa, GP27 for effector Treg, GP30 for Treg/Tz, GP8 for DETC, GP170, GP80, GP23, GP171, etc.) are *RQVI* GP indices. The four factors plotted in this panel — F22, F30, F58, F68 — are *Flashier* factors. The digits collide for F22 and F30, but they index a completely separate factorization of the same data. So nothing in this panel is "GP68 from the lineage figure"; the Flashier/RQVI naming is what's confusing here.
-
-**(b) What does the panel actually show?** Across all 10 RQVI seeds, the best matches (read from the figure title bars) are:
+Across all 10 RQVI seeds, the best matches (read from the figure title bars) are:
 
 | Flashier | Best RQVI GP | Seed | Pearson r |
 | --- | --- | --- | --- |
@@ -107,14 +101,7 @@ Two clarifications:
 | F58 | GP 110 | 1 | 0.840 |
 | F68 | GP 76 | 3 | 0.840 |
 
-These RQVI GPs (96, 112, 110, 76) are *not* the canonical lineage GPs from draft figure 2D either — but the panel is still doing useful work, because the **four Flashier factors were hand-picked as lineage-marking factors**, and the panel demonstrates that RQVI's best-of-10-seeds search recovers comparable programs at high r. In other words, the panel pivots on Flashier (showing RQVI catches Flashier's lineages), not on RQVI (showing the canonical GP68/22/29/27 etc.).
-
-If the user wants the panel to instead pivot on the *RQVI* canonical lineage GPs — i.e. start from GP68/22/29/27/30/8 and find each one's best Flashier match — that is a different figure and needs a new script (basically a transposed version of `fig_rqvi_best_match_4factors.py`). Decide which way to go before the next revision.
-
-> **Action items:**
-> 1. Confirm and document the biological identity (lead genes, lineage) of each Flashier factor F22 / F30 / F58 / F68 — this requires reading `gene_factor_matrix.txt` (~81 MB external file) and interpreting the lead genes.
-> 2. Decide whether the panel pivots on Flashier (current) or on RQVI canonical lineage GPs (would need a new script).
-> 3. The detail doc for this panel did not previously exist — see the new [`best_match_4factors.md`](best_match_4factors.md).
+So the panel pivots on Flashier and asks: "for each of the four lineage-defining Flashier GPs, does RQVI find a comparable program?" — and the answer is yes, with Pearson r in the 0.81–0.90 range after multi-seed search. The RQVI GP indices on the right (GP96 / GP112 / GP110 / GP76) are *not* the same numbers as the canonical RQVI GPs called out elsewhere in the paper draft (GP68 / GP22 / GP29 / GP27 / GP30 / GP8 / etc.) — that is just a numbering coincidence between two independent factorizations. F22 and GP22, for example, are completely unrelated objects living in different index spaces.
 
 ### Q4 — Is `rqvi_flashier_coverage.pdf` a cumulative coverage plot?
 
@@ -128,18 +115,3 @@ A few methodological notes that should make it into the figure caption:
 - **Why the curve matters:** it answers "how many RQVI seeds do we need to capture the Flashier factorization?" A curve that saturates fast (e.g. 3–4 seeds is enough at r = 0.5) supports the multi-seed-robustness claim and explains why we run RQVI 10 times in the supplementary scalability story.
 
 See [`coverage.md`](coverage.md) for full methodology.
-
----
-
-## 5. Open action items
-
-Surfaced here so they can be triaged in one place. None of these are in the scope of this internal report; they all touch figure-generation code or biological annotation.
-
-1. **Generate main-figure panel b** — cell-level Flashier × RQVI similarity heatmap. Currently absent; this is the headline visual for the convergent-discovery claim.
-2. **Annotate `r = 0.436` on `pair_GP45_F35.pdf`.** Currently only in the filename and the doc; should be visible to readers of the figure. Small edit to `scripts/fig_pair_GP45_F35.py`.
-3. **Annotate lead-gene overlap on `pair_GP45_F35.pdf`** (optional). The MD scatters already label the top 50 genes; a one-line subtitle naming the shared TCR-activation lead genes would make the rhetorical claim land harder.
-4. **Decide the pivot of `rqvi_best_match_4factors.pdf`.** Current panel pivots on four Flashier factors (F22/F30/F58/F68). If we want the panel to pivot instead on the RQVI canonical lineage GPs (GP68/22/29/27/30/8), we need a new transposed script.
-5. **Annotate the biology of F22, F30, F58, F68.** Read lead genes from the external `gene_factor_matrix.txt` and document which T-cell lineage each Flashier factor marks; record in [`best_match_4factors.md`](best_match_4factors.md).
-6. **Reconcile coverage thresholds.** `scripts/fig_rqvi_flashier_coverage.py` uses `[0.3, 0.4, 0.5, 0.6]`; the previous `coverage.md` said 9 thresholds 0.1-0.9. The doc has been updated to match the script. If the original intent was 9 thresholds, change the script.
-7. **Verify whether GP38 / F58 is still being used.** The doc [`pair_GP38_F58.md`](pair_GP38_F58.md) describes a "good match" companion pair (r = 0.573, above threshold). The user did not list it as a current panel — confirm whether to archive it to `docs/old_version_or_other/` or keep as a backup.
-8. **Refresh the README.** `figures_version_v2/README.md` lists figures at flat paths like `figures/scalability.pdf`, but they have been reorganised into `figures/main_figures/` and `figures/sup_figures/`. Also, the README's table has `—` for the doc column of `rqvi_best_match_4factors.pdf` — that gap is now filled by [`best_match_4factors.md`](best_match_4factors.md), so the table can be updated.
