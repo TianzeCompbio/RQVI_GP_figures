@@ -18,18 +18,24 @@ import matplotlib.pyplot as plt
 import scanpy as sc
 from scipy import sparse
 from utils import (
-    load_main_obs, load_gene_effects, md_scatter,
+    load_main_obs, load_gene_effects, md_scatter_example,
     FIG_DIR, PATH_RQVI_H5AD, PATH_MAIN_H5AD,
-    LEVEL1_ORDER,
+    LEVEL1_ORDER, EXAMPLE_MDE_CMAP,
+    set_example_figure_style, style_umap_axes, style_scanpy_colorbar,
 )
 
 PATH_RQVI_UMAP_H5AD = "/data/tianzew/immgenT/RQVI/cmtloss08_64by4GPs_mde_totalVI.h5ad"
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 PAIR = {"rqvi_gp": 45, "flashier_factor": 35}
+MAIN_FIG_DIR = FIG_DIR / "main_figures"
+MAIN_FIG_DIR.mkdir(exist_ok=True)
 
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 PATH_FLASHIER_GENE = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/gene_factor_matrix.txt"
+
+set_example_figure_style()
+sc.set_figure_params(vector_friendly=True, dpi=120)
 
 # ─── Load UMAP data ─────────────────────────────────────────────────────────
 print("Loading metadata...")
@@ -135,16 +141,36 @@ fig, axes = plt.subplots(2, 2, figsize=(10, 8))
 gp = PAIR["rqvi_gp"]
 col = f"F{PAIR['flashier_factor']}"
 
-# RQVI UMAP
-sc.pl.umap(adata_sub, color=f"rqvi_gp{gp}", ax=axes[0, 0],
-           show=False, title=f"RQVI GP {gp}", frameon=False, size=5)
+def positive_vmax(values, percentile=98):
+    positive = values[values > 0]
+    return np.percentile(positive, percentile) if len(positive) else 1.0
 
-# Flashier UMAP — vmax at 98th percentile for better visualization
+def plot_umap_example(ax, obs_col, title, cbar_title, vmax):
+    before_axes = set(fig.axes)
+    sc.pl.umap(
+        adata_sub, color=obs_col, ax=ax,
+        show=False, title="", frameon=False, size=5,
+        cmap=EXAMPLE_MDE_CMAP, vmin=0, vmax=vmax,
+        alpha=0.9, colorbar_loc="right",
+    )
+    style_umap_axes(ax, title)
+    new_axes = [a for a in fig.axes if a not in before_axes and a is not ax]
+    if new_axes:
+        style_scanpy_colorbar(new_axes[-1], cbar_title)
+
+# RQVI UMAP
+rqvi_vals = adata_sub.obs[f"rqvi_gp{gp}"].values
+plot_umap_example(
+    axes[0, 0], f"rqvi_gp{gp}", f"RQVI GP {gp}", f"GP{gp}",
+    positive_vmax(rqvi_vals),
+)
+
+# Flashier UMAP -- vmax at 98th percentile for better visualization
 flashier_vals = adata_sub.obs[f"flashier_{col}"].values
-flashier_vmax = np.percentile(flashier_vals[flashier_vals > 0], 98) if (flashier_vals > 0).any() else 1.0
-sc.pl.umap(adata_sub, color=f"flashier_{col}", ax=axes[0, 1],
-           show=False, title=f"Flashier {col}", frameon=False, size=5,
-           vmax=flashier_vmax)
+plot_umap_example(
+    axes[0, 1], f"flashier_{col}", f"Flashier {col}", col,
+    positive_vmax(flashier_vals),
+)
 
 # --- Bottom row: MD plots ---
 for sub_i, (method, effects_df, gp_key) in enumerate([
@@ -154,17 +180,18 @@ for sub_i, (method, effects_df, gp_key) in enumerate([
     ax = axes[1, sub_i]
     gene_weights = effects_df[gp_key]
     title = f"RQVI GP {PAIR['rqvi_gp']}" if method == "RQVI" else f"Flashier F{PAIR['flashier_factor']}"
-    md_scatter(ax, gene_weights, mean_expr, title)
+    md_scatter_example(ax, gene_weights, mean_expr, title, top_k=12,
+                       point_size_bg=6, point_size_hl=28)
     if sub_i == 0:
-        ax.set_ylabel("Mean log expr", fontsize=11)
+        ax.set_ylabel("Mean log expr", fontsize=10)
     else:
         ax.set_ylabel("")
 
 fig.tight_layout()
 
 # ─── Save ─────────────────────────────────────────────────────────────────────
-outpath = FIG_DIR / "pair_GP45_F35.pdf"
-fig.savefig(outpath, bbox_inches="tight", dpi=200)
+outpath = MAIN_FIG_DIR / "pair_GP45_F35.pdf"
+fig.savefig(outpath, bbox_inches="tight", dpi=300)
 print(f"Saved figure to {outpath}")
 plt.close(fig)
 print("Done!")

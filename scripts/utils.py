@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import matplotlib.patheffects as pe
+import matplotlib.pyplot as plt
+from matplotlib.colors import LinearSegmentedColormap
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -23,6 +25,80 @@ PATH_GENE_EFFECTS = str(PROJECT_DIR / "data/gp_effects_matrix_seed0.csv")
 # ─── Constants ───────────────────────────────────────────────────────────────
 LEVEL1_ORDER = ["CD4", "CD8", "Treg", "gdT", "CD8aa", "DN", "nonconv", "DP", "thymocyte"]
 CLUSTER_COL = "Cluster_totalvi20240525rmigtsample_Res0.5"
+
+# ─── Example-matched visual style ───────────────────────────────────────────
+EXAMPLE_BLUE = "#2d8cf0"
+EXAMPLE_GRID = "#e9e9e9"
+EXAMPLE_AXIS = "#dedede"
+EXAMPLE_TEXT = "#1a1a1a"
+EXAMPLE_BG_POINT = "#cfcfcf"
+EXAMPLE_MDE_CMAP = LinearSegmentedColormap.from_list(
+    "example_mde_purple",
+    ["#d8d1e1", "#a88cf8", "#6555ff", "#1717ff"],
+    N=256,
+)
+
+
+def set_example_figure_style() -> None:
+    """Apply the clean white, light-grid style used by the reference figures."""
+    plt.rcParams.update({
+        "figure.facecolor": "white",
+        "axes.facecolor": "white",
+        "axes.edgecolor": EXAMPLE_AXIS,
+        "axes.labelcolor": EXAMPLE_TEXT,
+        "axes.linewidth": 0.8,
+        "axes.grid": True,
+        "axes.axisbelow": True,
+        "grid.color": EXAMPLE_GRID,
+        "grid.linewidth": 0.8,
+        "grid.alpha": 1.0,
+        "xtick.color": EXAMPLE_TEXT,
+        "ytick.color": EXAMPLE_TEXT,
+        "font.size": 9,
+        "axes.labelsize": 10,
+        "axes.titlesize": 11,
+        "xtick.labelsize": 9,
+        "ytick.labelsize": 9,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+    })
+
+
+def style_example_axes(ax, grid: bool = True) -> None:
+    """Style regular x/y axes to match the reference scatter plot."""
+    ax.set_facecolor("white")
+    ax.set_axisbelow(True)
+    ax.grid(grid, color=EXAMPLE_GRID, linewidth=0.8, alpha=1.0)
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(EXAMPLE_AXIS)
+        ax.spines[side].set_linewidth(0.8)
+    ax.tick_params(axis="both", length=0, width=0.8, colors=EXAMPLE_TEXT)
+
+
+def style_umap_axes(ax, title: str) -> None:
+    """Style Scanpy embedding axes to match the reference MDE panel."""
+    ax.set_title(title, fontsize=11, fontweight="normal", pad=6, color=EXAMPLE_TEXT)
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.grid(False)
+    ax.set_facecolor("white")
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+
+def style_scanpy_colorbar(cbar_ax, title: str = "") -> None:
+    """Lightly restyle a Scanpy-generated colorbar."""
+    cbar_ax.tick_params(length=0, labelsize=8, colors=EXAMPLE_TEXT)
+    cbar_ax.grid(False)
+    if title:
+        cbar_ax.set_title(title, fontsize=8, fontweight="normal", pad=4)
+    for spine in cbar_ax.spines.values():
+        spine.set_color(EXAMPLE_AXIS)
+        spine.set_linewidth(0.6)
 
 
 # ─── Data loading ────────────────────────────────────────────────────────────
@@ -298,3 +374,60 @@ def md_scatter(ax, gene_weights, mean_expr, title, top_k=50,
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
     ax.margins(x=0.05)
+
+
+def md_scatter_example(ax, gene_weights, mean_expr, title, top_k=12,
+                       point_size_bg=7, point_size_hl=28,
+                       color_hl=EXAMPLE_BLUE, fontsize=7.0,
+                       label_sep_px=12):
+    """MD scatter styled like the provided reference scatter image."""
+    df = pd.DataFrame({"x": gene_weights, "y": mean_expr}).dropna()
+
+    ax.scatter(
+        df["x"], df["y"],
+        s=point_size_bg, c=EXAMPLE_BG_POINT, alpha=0.18,
+        linewidths=0, rasterized=True, zorder=1,
+    )
+
+    top_genes = df["x"].abs().nlargest(top_k).index
+    hl = df.loc[top_genes].copy()
+    ax.scatter(
+        hl["x"], hl["y"],
+        s=point_size_hl, c=color_hl, alpha=0.95,
+        edgecolors="white", linewidths=0.35, zorder=3,
+    )
+
+    ax.margins(x=0.08, y=0.08)
+    style_example_axes(ax, grid=True)
+    ax.set_title(title, fontsize=10, fontweight="normal", loc="left",
+                 color=EXAMPLE_TEXT, pad=6)
+    ax.set_xlabel("Gene effect", fontsize=10)
+
+    x_span = ax.get_xlim()[1] - ax.get_xlim()[0]
+    x_offset = 0.018 * x_span
+    hl["side_right"] = hl["x"] >= 0
+    hl["x_lab"] = hl["x"] + np.where(hl["side_right"], x_offset, -x_offset)
+    hl["y_lab"] = hl["y"]
+
+    ax.figure.canvas.draw()
+    for side_right, mask in ((True, hl["side_right"].values),
+                             (False, ~hl["side_right"].values)):
+        if not mask.any():
+            continue
+        side_idx = hl.index[mask]
+        hl.loc[side_idx, "y_lab"] = _vertical_dodge(
+            ax,
+            hl.loc[side_idx, "x_lab"].values,
+            hl.loc[side_idx, "y_lab"].values,
+            min_sep_px=label_sep_px,
+            max_shift_px=70,
+        )
+
+    for g, r in hl.iterrows():
+        ha = "left" if r["side_right"] else "right"
+        ax.text(
+            r["x_lab"], r["y_lab"], g,
+            ha=ha, va="center", fontsize=fontsize, color=EXAMPLE_TEXT,
+            path_effects=[pe.withStroke(linewidth=1.4, foreground="white")],
+            clip_on=False, zorder=4,
+        )

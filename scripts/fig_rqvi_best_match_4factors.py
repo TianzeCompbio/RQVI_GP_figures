@@ -18,11 +18,12 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import scanpy as sc
 from scipy import sparse
-from matplotlib.colors import LinearSegmentedColormap
 from utils import (
-    load_main_obs, md_scatter,
+    load_main_obs, md_scatter_example,
     FIG_DIR, PATH_MAIN_H5AD,
     LEVEL1_ORDER, CLUSTER_COL,
+    EXAMPLE_MDE_CMAP,
+    set_example_figure_style, style_umap_axes, style_scanpy_colorbar,
 )
 
 # ─── Quick test toggle ───────────────────────────────────────────────────────
@@ -31,6 +32,8 @@ QUICK_TEST = False  # True: only F58, 20k cells; False: all 4 factors, 100k cell
 # ─── Config ───────────────────────────────────────────────────────────────────
 TARGET_FACTORS = [58] if QUICK_TEST else [22, 30, 58, 68]
 TARGET_N = 20_000 if QUICK_TEST else 100_000
+SUP_FIG_DIR = FIG_DIR / "sup_figures"
+SUP_FIG_DIR.mkdir(exist_ok=True)
 
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 CORR_RST_DIR = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/function_analysis/corr_rst"
@@ -39,9 +42,8 @@ RQVI_CELL_H5AD_TEMPLATE = "/data/tianzew/immgenT/RQVI_multiseeds/results/cmtloss
 RQVI_GENE_EFFECTS_TEMPLATE = "/homes/gws/tianzew/projects/GP_figures/data/RQVI_gene_factors/gp_effects_matrix_seed{}.csv"
 N_SEEDS = 10
 
-# Purple colormap
-purples_cmap = LinearSegmentedColormap.from_list(
-    "custom_purples", ["#f0f0f0", "#c6b3d9", "#7b5ea7", "#3f2d76"], N=256)
+set_example_figure_style()
+sc.set_figure_params(vector_friendly=True, dpi=120)
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Step 1: Best-match computation
@@ -252,6 +254,23 @@ fig, axes = plt.subplots(2, n_factors, figsize=(5 * n_factors, 8))
 if n_factors == 1:
     axes = axes.reshape(2, 1)
 
+def positive_vmax(values, percentile=98):
+    positive = values[values > 0]
+    return np.percentile(positive, percentile) if len(positive) else 1.0
+
+def plot_umap_example(ax, obs_col, title, cbar_title, vmax):
+    before_axes = set(fig.axes)
+    sc.pl.umap(
+        adata_sub, color=obs_col, ax=ax, show=False,
+        title="", frameon=False, size=8,
+        cmap=EXAMPLE_MDE_CMAP, vmin=0, vmax=vmax,
+        alpha=0.9, colorbar_loc="right",
+    )
+    style_umap_axes(ax, title)
+    new_axes = [a for a in fig.axes if a not in before_axes and a is not ax]
+    if new_axes:
+        style_scanpy_colorbar(new_axes[-1], cbar_title)
+
 for col_i, f_idx in enumerate(TARGET_FACTORS):
     m = best_matches[f_idx]
     seed, gp, corr = m["seed"], m["gp"], m["corr"]
@@ -260,19 +279,20 @@ for col_i, f_idx in enumerate(TARGET_FACTORS):
     # --- Top row: UMAP ---
     ax = axes[0, col_i]
     vals = adata_sub.obs[obs_col].values
-    vmax = np.percentile(vals[vals > 0], 98) if (vals > 0).any() else 1.0
-    sc.pl.umap(adata_sub, color=obs_col, ax=ax, show=False,
-               title=f"GP {gp} (seed {seed})",
-               frameon=False, size=15,
-               cmap=purples_cmap, vmin=0, vmax=vmax)
+    vmax = positive_vmax(vals)
+    plot_umap_example(
+        ax, obs_col, f"GP {gp} (seed {seed})", f"GP{gp}", vmax,
+    )
 
     # --- Bottom row: MD ---
     ax = axes[1, col_i]
     title = f"GP {gp} (seed {seed})"
-    md_scatter(ax, gene_effects_by_factor[f_idx], mean_expr, title,
-               point_size_bg=20, point_size_hl=50)
+    md_scatter_example(
+        ax, gene_effects_by_factor[f_idx], mean_expr, title,
+        top_k=10, point_size_bg=7, point_size_hl=28,
+    )
     if col_i == 0:
-        ax.set_ylabel("Mean log expr", fontsize=11)
+        ax.set_ylabel("Mean log expr", fontsize=10)
     else:
         ax.set_ylabel("")
 
@@ -280,16 +300,18 @@ for col_i, f_idx in enumerate(TARGET_FACTORS):
     axes[0, col_i].text(
         0.5, 1.15, f"F{f_idx} match (r={corr:.3f})",
         transform=axes[0, col_i].transAxes,
-        ha="center", fontsize=10, fontweight="bold")
+        ha="center", fontsize=10, fontweight="normal")
 
 fig.suptitle("Best-matched RQVI GPs for Flashier factors", fontsize=13,
-             fontweight="bold", y=1.02)
+             fontweight="normal", y=1.02)
 fig.tight_layout()
 
 # ─── Save ─────────────────────────────────────────────────────────────────────
 suffix = "_quicktest" if QUICK_TEST else ""
-outpath = FIG_DIR / f"rqvi_best_match_4factors{suffix}.pdf"
-fig.savefig(outpath, bbox_inches="tight", dpi=200)
+outpath = SUP_FIG_DIR / f"rqvi_best_match_4factors{suffix}.pdf"
+fig.savefig(outpath, bbox_inches="tight", dpi=300)
+if not QUICK_TEST:
+    fig.savefig(outpath.with_suffix(".png"), bbox_inches="tight", dpi=250)
 print(f"\nSaved figure to {outpath}")
 plt.close(fig)
 print("Done!")
