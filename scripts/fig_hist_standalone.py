@@ -1,7 +1,7 @@
 """
 Standalone histogram: multi-seed best-match signed Pearson r distribution.
 
-Computes inline with 10 RQVI seeds + signed correlation (−1 to 1), matching the
+Computes inline with 10 RQVI seeds + signed correlation, matching the
 coverage figure from fig_representative_pairs.py. Marks GP38/F58 and GP45/F35.
 """
 
@@ -18,6 +18,8 @@ from utils import load_main_obs, FIG_DIR, PROJECT_DIR, CLUSTER_COL
 
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 CORR_RST_DIR = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/function_analysis/corr_rst"
+MAIN_FIG_DIR = FIG_DIR / "main_figures"
+MAIN_FIG_DIR.mkdir(exist_ok=True)
 
 
 # ─── Step 1: Load metadata & Flashier cluster means ─────────────────────────
@@ -72,18 +74,18 @@ print("Plotting histogram...")
 fig, ax = plt.subplots(1, 1, figsize=(6, 4))
 
 # Histogram
-ax.hist(best_corr_all_seeds, bins=30,
+ax.hist(best_corr_all_seeds, bins=np.linspace(0, 1, 31),
         color="#4C72B0", edgecolor="white", linewidth=0.5, alpha=0.7,
         zorder=2)
 
 ax.set_xlabel("Best-match Pearson r with RQVI", fontsize=9)
 ax.set_ylabel("Count (Flashier factors)", fontsize=9)
-ax.set_xlim(-1, 1)
+ax.set_xlim(0, 1)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
 # ─── Save ────────────────────────────────────────────────────────────────────
-outpath = FIG_DIR / "hist_standalone.pdf"
+outpath = MAIN_FIG_DIR / "hist_standalone.pdf"
 fig.savefig(outpath, bbox_inches="tight", dpi=200)
 print(f"Saved figure to {outpath}")
 plt.close(fig)

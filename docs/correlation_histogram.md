@@ -6,7 +6,7 @@ Multi-seed best-match signed Pearson r distribution across all 200 Flashier fact
 
 ## Description
 
-For each of the 200 Flashier factors, the script computes the cluster-level Z-scored Pearson r against every RQVI GP across all 10 seeds. The best (maximum positive) correlation per Flashier factor across all seeds is retained. The resulting distribution is plotted as a histogram spanning r from -1 to 1.
+For each of the 200 Flashier factors, the script computes the cluster-level Z-scored Pearson r against every RQVI GP across all 10 seeds. The best (maximum positive) correlation per Flashier factor across all seeds is retained. The resulting distribution is plotted as a histogram spanning r from 0 to 1.
 
 ## Inputs
 
@@ -18,7 +18,7 @@ For each of the 200 Flashier factors, the script computes the cluster-level Z-sc
 
 ## Script
 
-`scripts/fig_hist_standalone.py` -> `figures/hist_standalone.pdf`
+`scripts/fig_hist_standalone.py` -> `figures/main_figures/hist_standalone.pdf`
 
 ## How to reproduce
 
