@@ -34,6 +34,8 @@ TARGET_FACTORS = [58] if QUICK_TEST else [22, 30, 58, 68]
 TARGET_N = 20_000 if QUICK_TEST else 100_000
 SUP_FIG_DIR = FIG_DIR / "sup_figures"
 SUP_FIG_DIR.mkdir(exist_ok=True)
+PANEL_FIG_DIR = SUP_FIG_DIR / "rqvi_best_match_4factors_panels"
+PANEL_FIG_DIR.mkdir(exist_ok=True)
 
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 CORR_RST_DIR = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/function_analysis/corr_rst"
@@ -258,8 +260,8 @@ def positive_vmax(values, percentile=98):
     positive = values[values > 0]
     return np.percentile(positive, percentile) if len(positive) else 1.0
 
-def plot_umap_example(ax, obs_col, title, cbar_title, vmax):
-    before_axes = set(fig.axes)
+def plot_umap_example(fig_obj, ax, obs_col, title, cbar_title, vmax):
+    before_axes = set(fig_obj.axes)
     sc.pl.umap(
         adata_sub, color=obs_col, ax=ax, show=False,
         title="", frameon=False, size=8,
@@ -267,9 +269,28 @@ def plot_umap_example(ax, obs_col, title, cbar_title, vmax):
         alpha=0.9, colorbar_loc="right",
     )
     style_umap_axes(ax, title)
-    new_axes = [a for a in fig.axes if a not in before_axes and a is not ax]
+    new_axes = [a for a in fig_obj.axes if a not in before_axes and a is not ax]
     if new_axes:
         style_scanpy_colorbar(new_axes[-1], cbar_title)
+
+
+def plot_md_panel(ax, f_idx, title, ylabel=True):
+    md_scatter_example(
+        ax, gene_effects_by_factor[f_idx], mean_expr, title,
+        top_k=10, point_size_bg=7, point_size_hl=28,
+    )
+    ax.set_ylabel("Mean log expr" if ylabel else "", fontsize=10)
+
+
+def save_single_panel(filename, plot_func, figsize=(4.6, 3.8)):
+    panel_fig, panel_ax = plt.subplots(1, 1, figsize=figsize)
+    plot_func(panel_fig, panel_ax)
+    panel_fig.tight_layout()
+    outpath = PANEL_FIG_DIR / filename
+    panel_fig.savefig(outpath, bbox_inches="tight", dpi=300)
+    plt.close(panel_fig)
+    print(f"Saved sub-figure to {outpath}")
+
 
 for col_i, f_idx in enumerate(TARGET_FACTORS):
     m = best_matches[f_idx]
@@ -281,20 +302,13 @@ for col_i, f_idx in enumerate(TARGET_FACTORS):
     vals = adata_sub.obs[obs_col].values
     vmax = positive_vmax(vals)
     plot_umap_example(
-        ax, obs_col, f"GP {gp} (seed {seed})", f"GP{gp}", vmax,
+        fig, ax, obs_col, f"GP {gp} (seed {seed})", f"GP{gp}", vmax,
     )
 
     # --- Bottom row: MD ---
     ax = axes[1, col_i]
     title = f"GP {gp} (seed {seed})"
-    md_scatter_example(
-        ax, gene_effects_by_factor[f_idx], mean_expr, title,
-        top_k=10, point_size_bg=7, point_size_hl=28,
-    )
-    if col_i == 0:
-        ax.set_ylabel("Mean log expr", fontsize=10)
-    else:
-        ax.set_ylabel("")
+    plot_md_panel(ax, f_idx, title, ylabel=(col_i == 0))
 
     # Column label at top
     axes[0, col_i].text(
@@ -314,4 +328,31 @@ if not QUICK_TEST:
     fig.savefig(outpath.with_suffix(".png"), bbox_inches="tight", dpi=250)
 print(f"\nSaved figure to {outpath}")
 plt.close(fig)
+
+if not QUICK_TEST:
+    for f_idx in TARGET_FACTORS:
+        m = best_matches[f_idx]
+        seed, gp, corr = m["seed"], m["gp"], m["corr"]
+        obs_col = f"rqvi_s{seed}_gp{gp}"
+        vals = adata_sub.obs[obs_col].values
+        vmax = positive_vmax(vals)
+        title = f"F{f_idx} match (r={corr:.3f})\nGP {gp} (seed {seed})"
+        stem = f"rqvi_best_match_4factors_F{f_idx}_GP{gp}_seed{seed}"
+
+        save_single_panel(
+            f"{stem}_umap.pdf",
+            lambda panel_fig, panel_ax, obs_col=obs_col, title=title,
+                   gp=gp, vmax=vmax: plot_umap_example(
+                       panel_fig, panel_ax, obs_col, title, f"GP{gp}", vmax,
+                   ),
+            figsize=(4.6, 3.8),
+        )
+        save_single_panel(
+            f"{stem}_md_scatter.pdf",
+            lambda panel_fig, panel_ax, f_idx=f_idx,
+                   title=title: plot_md_panel(
+                       panel_ax, f_idx, title, ylabel=True,
+                   ),
+            figsize=(4.4, 3.6),
+        )
 print("Done!")

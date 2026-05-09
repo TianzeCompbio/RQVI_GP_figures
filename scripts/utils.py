@@ -379,7 +379,7 @@ def md_scatter(ax, gene_weights, mean_expr, title, top_k=50,
 def md_scatter_example(ax, gene_weights, mean_expr, title, top_k=12,
                        point_size_bg=7, point_size_hl=28,
                        color_hl=EXAMPLE_BLUE, fontsize=7.0,
-                       label_sep_px=12):
+                       label_sep_px=12, leader_gap_px=3):
     """MD scatter styled like the provided reference scatter image."""
     df = pd.DataFrame({"x": gene_weights, "y": mean_expr}).dropna()
 
@@ -423,11 +423,28 @@ def md_scatter_example(ax, gene_weights, mean_expr, title, top_k=12,
             max_shift_px=70,
         )
 
+    texts = {}
     for g, r in hl.iterrows():
         ha = "left" if r["side_right"] else "right"
-        ax.text(
+        texts[g] = ax.text(
             r["x_lab"], r["y_lab"], g,
             ha=ha, va="center", fontsize=fontsize, color=EXAMPLE_TEXT,
             path_effects=[pe.withStroke(linewidth=1.4, foreground="white")],
             clip_on=False, zorder=4,
+        )
+
+    ax.figure.canvas.draw()
+    renderer = ax.figure.canvas.get_renderer()
+    for g, r in hl.iterrows():
+        sx, sy = _nearest_edge_anchor(
+            ax, texts[g], r["x"], r["y"],
+            pad_px=leader_gap_px, renderer=renderer,
+        )
+        ax.annotate(
+            "", xy=(r["x"], r["y"]), xytext=(sx, sy),
+            arrowprops=dict(
+                arrowstyle="-", lw=0.55, color="0.45", alpha=0.85,
+                shrinkA=0, shrinkB=2,
+            ),
+            clip_on=False, zorder=3.5,
         )

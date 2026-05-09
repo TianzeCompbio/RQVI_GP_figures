@@ -22,6 +22,7 @@ For the companion good-match pair, see [`pair_GP38_F58.md`](pair_GP38_F58.md) (r
 
 - **Top row:** UMAP cell loading plots (RQVI GP 45 left, Flashier F35 right), colored by loading magnitude
 - **Bottom row:** MD (mean-expression vs. gene-effect) scatter plots for the same pair, showing gene-level effect sizes against mean log expression
+- The UMAP cell loadings are display-scaled to 0-1 using the positive 99.5th percentile as the saturation point, so the colorbars remain 0-1 while avoiding compression by extreme outliers.
 
 ## Inputs
 
@@ -37,7 +38,14 @@ RQVI gene effects are loaded via `utils.load_gene_effects()`.
 
 ## Script
 
-`scripts/fig_pair_GP45_F35.py` -> `figures/pair_GP45_F35.pdf`
+`scripts/fig_pair_GP45_F35.py` -> `figures/main_figures/pair_GP45_F35.pdf`
+
+The script also writes editable standalone panel PDFs to:
+
+- `figures/main_figures/pair_GP45_F35_panels/pair_GP45_F35_panel_C_rqvi_GP45_umap.pdf`
+- `figures/main_figures/pair_GP45_F35_panels/pair_GP45_F35_panel_D_flashier_F35_umap.pdf`
+- `figures/main_figures/pair_GP45_F35_panels/pair_GP45_F35_panel_E_rqvi_GP45_md_scatter.pdf`
+- `figures/main_figures/pair_GP45_F35_panels/pair_GP45_F35_panel_F_flashier_F35_md_scatter.pdf`
 
 ## How to reproduce
 

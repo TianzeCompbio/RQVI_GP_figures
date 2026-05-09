@@ -7,7 +7,7 @@
 A 2 × 4 figure (one column per Flashier factor):
 
 - **Top row:** UMAP cell-loading plots of the best-match RQVI GP (purple colormap). Title shows `GP {gp} (seed {seed})` with a column header `F{factor} match (r=…)`.
-- **Bottom row:** MD scatter (mean log expression vs gene effect) for the same RQVI GP, with the top-50 genes by absolute weight labelled.
+- **Bottom row:** MD scatter (mean log expression vs gene effect) for the same RQVI GP, styled like the GP45/F35 example panels, with the top 10 genes by absolute weight labelled and connected to their dots by simple leader lines.
 
 The Flashier side is *not* drawn. The point of the panel is to document the RQVI program that Flashier's factor maps to.
 
@@ -18,9 +18,9 @@ Read directly from the figure title bars:
 | Flashier | Best RQVI GP | Seed | Pearson r |
 | --- | --- | --- | --- |
 | F22 | GP 96 | 6 | 0.897 |
-| F30 | GP 112 | 5 | 0.812 |
+| F30 | GP 112 | 5 | 0.912 |
 | F58 | GP 110 | 1 | 0.840 |
-| F68 | GP 76 | 3 | 0.840 |
+| F68 | GP 76 | 3 | 0.940 |
 
 For comparison, the seed-0-only matches in `data/cross_method_best_corr.csv` are systematically lower:
 
@@ -63,7 +63,8 @@ The lead genes for each of F22, F30, F58, F68 can be read from `gene_factor_matr
 ## Script & output
 
 - **Script:** `scripts/fig_rqvi_best_match_4factors.py`
-- **Output figure:** `figures/sup_figures/rqvi_best_match_4factors.pdf` (~6.7 MB) and `figures/sup_figures/rqvi_best_match_4factors.png` (preferred for embedding)
+- **Output figure:** `figures/sup_figures/rqvi_best_match_4factors.pdf` and `figures/sup_figures/rqvi_best_match_4factors.png` (preferred for embedding)
+- **Standalone panel PDFs:** `figures/sup_figures/rqvi_best_match_4factors_panels/`
 - **Hard-coded targets:** `TARGET_FACTORS = [22, 30, 58, 68]`, `N_SEEDS = 10`, `TARGET_N = 100_000` (stratified downsample for UMAP)
 
 ## How to reproduce
@@ -78,4 +79,4 @@ The script's stdout prints the best-match table at the start of step 1; that pri
 
 - The metric used here is *positive* Pearson r, but the coverage panel ([`coverage.md`](coverage.md)) uses `|r|` — the two panels are not strictly on the same metric.
 - The panel does not show the Flashier side, so a reader cannot independently verify the match from the figure alone — they have to trust the r value in the column header.
-- The PDF is 6.7 MB; use the PNG version for slide decks and submission unless vector quality is required.
+- Use the PNG version for slide decks and submission unless vector quality is required.

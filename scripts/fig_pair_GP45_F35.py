@@ -28,14 +28,27 @@ PATH_RQVI_UMAP_H5AD = "/data/tianzew/immgenT/RQVI/cmtloss08_64by4GPs_mde_totalVI
 
 # ─── Config ───────────────────────────────────────────────────────────────────
 PAIR = {"rqvi_gp": 45, "flashier_factor": 35}
+UMAP_DISPLAY_PERCENTILE = 99.5
 MAIN_FIG_DIR = FIG_DIR / "main_figures"
 MAIN_FIG_DIR.mkdir(exist_ok=True)
+PANEL_FIG_DIR = MAIN_FIG_DIR / "pair_GP45_F35_panels"
+PANEL_FIG_DIR.mkdir(exist_ok=True)
 
 PATH_FLASHIER_CELL = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/cell_factor_matrix.txt"
 PATH_FLASHIER_GENE = "/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/gene_factor_matrix.txt"
 
 set_example_figure_style()
 sc.set_figure_params(vector_friendly=True, dpi=120)
+
+
+def robust_unit_scale(values, percentile=UMAP_DISPLAY_PERCENTILE):
+    """Scale positive loadings so the chosen percentile maps to 1."""
+    arr = np.asarray(values, dtype=float)
+    positive = arr[np.isfinite(arr) & (arr > 0)]
+    cap = np.nanpercentile(positive, percentile) if len(positive) else 1.0
+    if not np.isfinite(cap) or cap <= 0:
+        return np.clip(arr, 0, 1), cap
+    return np.clip(arr / cap, 0, 1), cap
 
 # ─── Load UMAP data ─────────────────────────────────────────────────────────
 print("Loading metadata...")
@@ -84,10 +97,22 @@ if hasattr(vals, 'toarray'):
     vals = vals.toarray().ravel()
 else:
     vals = np.asarray(vals).ravel()
-adata_sub.obs[f"rqvi_gp{gp}"] = vals
+rqvi_display, rqvi_cap = robust_unit_scale(vals)
+adata_sub.obs[f"rqvi_gp{gp}"] = rqvi_display
+print(
+    f"  Display-scaled RQVI GP{gp} by positive p{UMAP_DISPLAY_PERCENTILE}="
+    f"{rqvi_cap:.4g}; new max={np.nanmax(rqvi_display):.4g}"
+)
 
 col = f"F{PAIR['flashier_factor']}"
-adata_sub.obs[f"flashier_{col}"] = flashier_cell.loc[sampled_idx, col].values
+flashier_raw = flashier_cell.loc[sampled_idx, col].values.astype(float)
+flashier_vals, flashier_cap = robust_unit_scale(flashier_raw)
+adata_sub.obs[f"flashier_{col}"] = flashier_vals
+print(
+    f"  Display-scaled Flashier {col} by positive p{UMAP_DISPLAY_PERCENTILE}="
+    f"{flashier_cap:.4g}; raw max={np.nanmax(flashier_raw):.4g}; "
+    f"new max={np.nanmax(flashier_vals):.4g}"
+)
 
 del adata_rqvi, adata_umap, flashier_cell
 gc.collect()
@@ -141,12 +166,8 @@ fig, axes = plt.subplots(2, 2, figsize=(10, 8))
 gp = PAIR["rqvi_gp"]
 col = f"F{PAIR['flashier_factor']}"
 
-def positive_vmax(values, percentile=98):
-    positive = values[values > 0]
-    return np.percentile(positive, percentile) if len(positive) else 1.0
-
-def plot_umap_example(ax, obs_col, title, cbar_title, vmax):
-    before_axes = set(fig.axes)
+def plot_umap_example(fig_obj, ax, obs_col, title, cbar_title, vmax):
+    before_axes = set(fig_obj.axes)
     sc.pl.umap(
         adata_sub, color=obs_col, ax=ax,
         show=False, title="", frameon=False, size=5,
@@ -154,22 +175,46 @@ def plot_umap_example(ax, obs_col, title, cbar_title, vmax):
         alpha=0.9, colorbar_loc="right",
     )
     style_umap_axes(ax, title)
-    new_axes = [a for a in fig.axes if a not in before_axes and a is not ax]
+    new_axes = [a for a in fig_obj.axes if a not in before_axes and a is not ax]
     if new_axes:
         style_scanpy_colorbar(new_axes[-1], cbar_title)
+
+
+def plot_md_panel(ax, method, effects_df, gp_key, ylabel=True):
+    gene_weights = effects_df[gp_key]
+    title = (
+        f"RQVI GP {PAIR['rqvi_gp']}"
+        if method == "RQVI"
+        else f"Flashier F{PAIR['flashier_factor']}"
+    )
+    md_scatter_example(
+        ax, gene_weights, mean_expr, title, top_k=12,
+        point_size_bg=6, point_size_hl=28,
+    )
+    ax.set_ylabel("Mean log expr" if ylabel else "", fontsize=10)
+
+
+def save_single_panel(filename, plot_func, figsize=(4.4, 3.6)):
+    panel_fig, panel_ax = plt.subplots(1, 1, figsize=figsize)
+    plot_func(panel_fig, panel_ax)
+    panel_fig.tight_layout()
+    outpath = PANEL_FIG_DIR / filename
+    panel_fig.savefig(outpath, bbox_inches="tight", dpi=300)
+    plt.close(panel_fig)
+    print(f"Saved sub-figure to {outpath}")
 
 # RQVI UMAP
 rqvi_vals = adata_sub.obs[f"rqvi_gp{gp}"].values
 plot_umap_example(
-    axes[0, 0], f"rqvi_gp{gp}", f"RQVI GP {gp}", f"GP{gp}",
-    positive_vmax(rqvi_vals),
+    fig, axes[0, 0], f"rqvi_gp{gp}", f"RQVI GP {gp}", f"GP{gp}",
+    1.0,
 )
 
-# Flashier UMAP -- vmax at 98th percentile for better visualization
+# Flashier UMAP -- robust display loading is clipped to [0, 1].
 flashier_vals = adata_sub.obs[f"flashier_{col}"].values
 plot_umap_example(
-    axes[0, 1], f"flashier_{col}", f"Flashier {col}", col,
-    positive_vmax(flashier_vals),
+    fig, axes[0, 1], f"flashier_{col}", f"Flashier {col}", col,
+    1.0,
 )
 
 # --- Bottom row: MD plots ---
@@ -177,15 +222,8 @@ for sub_i, (method, effects_df, gp_key) in enumerate([
     ("RQVI", rqvi_effects, str(PAIR["rqvi_gp"])),
     ("Flashier", flashier_gene, f"V{PAIR['flashier_factor']}"),
 ]):
-    ax = axes[1, sub_i]
-    gene_weights = effects_df[gp_key]
-    title = f"RQVI GP {PAIR['rqvi_gp']}" if method == "RQVI" else f"Flashier F{PAIR['flashier_factor']}"
-    md_scatter_example(ax, gene_weights, mean_expr, title, top_k=12,
-                       point_size_bg=6, point_size_hl=28)
-    if sub_i == 0:
-        ax.set_ylabel("Mean log expr", fontsize=10)
-    else:
-        ax.set_ylabel("")
+    plot_md_panel(axes[1, sub_i], method, effects_df, gp_key,
+                  ylabel=(sub_i == 0))
 
 fig.tight_layout()
 
@@ -194,4 +232,33 @@ outpath = MAIN_FIG_DIR / "pair_GP45_F35.pdf"
 fig.savefig(outpath, bbox_inches="tight", dpi=300)
 print(f"Saved figure to {outpath}")
 plt.close(fig)
+
+save_single_panel(
+    "pair_GP45_F35_panel_C_rqvi_GP45_umap.pdf",
+    lambda panel_fig, panel_ax: plot_umap_example(
+        panel_fig, panel_ax, f"rqvi_gp{gp}", f"RQVI GP {gp}", f"GP{gp}",
+        1.0,
+    ),
+    figsize=(4.6, 3.8),
+)
+save_single_panel(
+    "pair_GP45_F35_panel_D_flashier_F35_umap.pdf",
+    lambda panel_fig, panel_ax: plot_umap_example(
+        panel_fig, panel_ax, f"flashier_{col}", f"Flashier {col}", col, 1.0,
+    ),
+    figsize=(4.6, 3.8),
+)
+save_single_panel(
+    "pair_GP45_F35_panel_E_rqvi_GP45_md_scatter.pdf",
+    lambda panel_fig, panel_ax: plot_md_panel(
+        panel_ax, "RQVI", rqvi_effects, str(PAIR["rqvi_gp"]), ylabel=True,
+    ),
+)
+save_single_panel(
+    "pair_GP45_F35_panel_F_flashier_F35_md_scatter.pdf",
+    lambda panel_fig, panel_ax: plot_md_panel(
+        panel_ax, "Flashier", flashier_gene,
+        f"V{PAIR['flashier_factor']}", ylabel=True,
+    ),
+)
 print("Done!")
