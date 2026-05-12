@@ -1,0 +1,13 @@
+panel,figure_label,method,program,seed,rqvi_gp,flashier_factor,gene,gene_effect,mean_log_expr,source_column,above_0p1,abs_above_0p1,rank_positive_effect,rank_abs_effect
+Fig7f,Figure 7f,RQVI,RQVI GP45 (seed 0),0,45,,Cd8b1,0.18432897,0.4158294001918696,45,True,True,57,65
+Fig7f,Figure 7f,RQVI,RQVI GP45 (seed 0),0,45,,Cd8a,-0.08062285,0.4121078671432495,45,False,False,9576,245
+Fig7g,Figure 7g,Flashier,Flashier F35,,,35,Cd8b1,-0.0351677977986284,0.4158294001918696,V35,False,False,9584,187
+Fig7g,Figure 7g,Flashier,Flashier F35,,,35,Cd8a,-0.0506355887992348,0.4121078671432495,V35,False,False,9608,125
+FigS7g,Figure S7g,RQVI,"RQVI GP96 (seed 6), best match for Flashier F22",6,96,22,Cd8a,0.05304694,0.4121078671432495,96,False,False,101,229
+FigS7g,Figure S7g,RQVI,"RQVI GP96 (seed 6), best match for Flashier F22",6,96,22,Cd8b1,-0.18418992,0.4158294001918696,96,False,True,9615,26
+FigS7h,Figure S7h,RQVI,"RQVI GP112 (seed 5), best match for Flashier F30",5,112,30,Cd8a,0.015485227,0.4121078671432495,112,False,False,440,1567
+FigS7h,Figure S7h,RQVI,"RQVI GP112 (seed 5), best match for Flashier F30",5,112,30,Cd8b1,-0.19578302,0.4158294001918696,112,False,True,9611,45
+FigS7i,Figure S7i,RQVI,"RQVI GP110 (seed 1), best match for Flashier F58",1,110,58,Cd8b1,0.28678823,0.4158294001918696,110,True,True,11,30
+FigS7i,Figure S7i,RQVI,"RQVI GP110 (seed 1), best match for Flashier F58",1,110,58,Cd8a,-0.086854994,0.4121078671432495,110,False,False,9504,237
+FigS7j,Figure S7j,RQVI,"RQVI GP76 (seed 3), best match for Flashier F68",3,76,68,Cd8a,-0.35677838,0.4121078671432495,76,False,True,9611,15
+FigS7j,Figure S7j,RQVI,"RQVI GP76 (seed 3), best match for Flashier F68",3,76,68,Cd8b1,-0.49202538,0.4158294001918696,76,False,True,9616,6

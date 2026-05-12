@@ -1,0 +1,7 @@
+panel,program,source_column,genes_gt_0.1,max_gene_effect,source_path
+Fig7f,RQVI GP45 (seed 0),45,155,0.74630344,/homes/gws/tianzew/projects/GP_figures/data/RQVI_gene_factors/gp_effects_matrix_seed0.csv
+Fig7g,Flashier F35,V35,57,1.0,/homes/gws/tianzew/projects/gene_program_model/Evaluation/Subcluster/gene_factor_matrix.txt
+FigS7g,"RQVI GP96 (seed 6), best match for Flashier F22",96,48,0.54451704,/homes/gws/tianzew/projects/GP_figures/data/RQVI_gene_factors/gp_effects_matrix_seed6.csv
+FigS7h,"RQVI GP112 (seed 5), best match for Flashier F30",112,91,0.71953654,/homes/gws/tianzew/projects/GP_figures/data/RQVI_gene_factors/gp_effects_matrix_seed5.csv
+FigS7i,"RQVI GP110 (seed 1), best match for Flashier F58",110,89,0.46330762,/homes/gws/tianzew/projects/GP_figures/data/RQVI_gene_factors/gp_effects_matrix_seed1.csv
+FigS7j,"RQVI GP76 (seed 3), best match for Flashier F68",76,119,0.4361421,/homes/gws/tianzew/projects/GP_figures/data/RQVI_gene_factors/gp_effects_matrix_seed3.csv
