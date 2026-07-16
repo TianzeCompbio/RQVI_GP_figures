@@ -8,41 +8,95 @@ The visual design follows Figure 1C. Both matrices use a white-to-blue loading s
 
 ## Reproduction
 
-The default command reads the two saved display matrices and redraws the figure without recalculating factor matches:
+The GitHub repository is [TianzeCompbio/RQVI_GP_figures](https://github.com/TianzeCompbio/RQVI_GP_figures). Every filesystem path in this document is relative to the repository root. Clone the repository and enter that directory before running any command:
+
+```bash
+git clone https://github.com/TianzeCompbio/RQVI_GP_figures.git
+cd RQVI_GP_figures
+```
+
+### Where to find the figure
+
+The manuscript-ready combined figure is at `figures/main_figures/ebmf_rqvi_level2_comparison.pdf` ([open on GitHub](https://github.com/TianzeCompbio/RQVI_GP_figures/blob/main/figures/main_figures/ebmf_rqvi_level2_comparison.pdf)). Its PNG preview is at `figures/main_figures/ebmf_rqvi_level2_comparison.png`.
+
+The separately exported EBMF panel, corresponding-RQVI panel, and shared colorbar are in `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/` ([browse on GitHub](https://github.com/TianzeCompbio/RQVI_GP_figures/tree/main/figures/main_figures/ebmf_rqvi_level2_comparison_subfigures)). The plotting and matching script is `scripts/fig_ebmf_rqvi_level2_comparison.py`.
+
+### Redraw from the saved plotting matrices
+
+The default command reads the two saved display matrices and redraws both the combined figure and the standalone subfigure PDFs without recalculating factor matches:
 
 ```bash
 python scripts/fig_ebmf_rqvi_level2_comparison.py
 ```
 
-Recompute the one-to-one matching and overwrite the saved display matrices only when the underlying data or matching method changes:
+### Recompute the matching
+
+Recompute the one-to-one matching and overwrite the saved display matrices only when the underlying cluster-mean data or matching method changes. This command uses only files included in the repository:
 
 ```bash
-python scripts/export_ebmf_level2_cluster_means.py
 python scripts/fig_ebmf_rqvi_level2_comparison.py --recompute-matches
 ```
+
+The recomputation inputs are `data/ebmf_mean_loadings_by_level2_cluster.csv`, `data/rqvi_multiseed_mean_loadings_by_level2_cluster.csv`, `data/rqvi_multiseed_candidate_metadata.csv`, and `data/rqvi_seed0_level2_heatmap_cluster_order.csv`. No machine-specific absolute path is required.
 
 ## Figure files
 
 - `figures/main_figures/ebmf_rqvi_level2_comparison.pdf`: manuscript-ready figure.
 - `figures/main_figures/ebmf_rqvi_level2_comparison.png`: 300-dpi preview.
+- `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_A_ebmf_factors.pdf`: standalone EBMF heatmap for use as the left subfigure.
+- `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_B_corresponding_rqvi_factors.pdf`: standalone corresponding-RQVI heatmap for use as the right subfigure.
+- `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/shared_relative_loading_colorbar.pdf`: shared color scale that can be centered below the two subfigures.
 - `scripts/fig_ebmf_rqvi_level2_comparison.py`: complete plotting and matching code.
+
+The standalone PDFs do not contain internal panel letters or titles. Panel letters and the overall caption should be added by the manuscript layout so the same assets can be reused if their final panel positions change.
+
+## Subfigure layout
+
+The following LaTeX places the two heatmaps in separate subfigure environments and uses one shared color scale:
+
+```latex
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_A_ebmf_factors.pdf}
+        \caption{}
+        \label{fig:ebmf-level2}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_B_corresponding_rqvi_factors.pdf}
+        \caption{}
+        \label{fig:rqvi-level2}
+    \end{subfigure}
+
+    \includegraphics[width=0.20\textwidth]{figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/shared_relative_loading_colorbar.pdf}
+    \caption{Cluster-level activity profiles of corresponding EBMF and RQVI factors.}
+    \label{fig:ebmf-rqvi-level2-comparison}
+\end{figure*}
+```
 
 ## Data files
 
 - `data/ebmf_mean_loadings_by_level2_cluster.csv`: raw mean loadings for 114 clusters and 200 EBMF factors.
 - `data/rqvi_multiseed_mean_loadings_by_level2_cluster.csv`: raw mean loadings for 114 clusters and all 2,560 seed-specific RQVI candidates.
+- `data/rqvi_multiseed_candidate_metadata.csv`: RQVI program identifiers and the nonzero-variance eligibility flag.
+- `data/rqvi_seed0_level2_heatmap_cluster_order.csv`: common level2-cluster display order and broad lineage annotations.
 - `data/ebmf_rqvi_multiseed_level2_one_to_one_matches.csv`: the 200 selected EBMF–RQVI pairs, their Pearson correlations, and the display order.
+- `data/ebmf_rqvi_multiseed_one_to_one_seed_summary.csv`: audit summary of how many selected candidates came from each model run.
 - `data/ebmf_level2_scaled_loadings_for_comparison.csv`: the exact 200 × 114 matrix displayed in the left heatmap.
 - `data/matched_rqvi_multiseed_level2_scaled_loadings_for_comparison.csv`: the exact 200 × 114 matrix displayed in the right heatmap.
-- `data/rqvi_multiseed_candidate_metadata.csv`: RQVI program identifiers and the nonzero-variance eligibility flag.
 
 ## How the figure is generated
 
-The complete workflow is implemented in `scripts/fig_ebmf_rqvi_level2_comparison.py`:
+The repository contains the cluster-mean inputs produced by the upstream cell-level aggregation. Starting from those bundled inputs, matching, ordering, display scaling, and figure export are implemented in `scripts/fig_ebmf_rqvi_level2_comparison.py`:
 
 ```text
-cell-level loadings
-    → mean loading per level2 cluster
+bundled mean loadings per level2 cluster
     → EBMF × RQVI correlation matrix
     → global one-to-one factor assignment
     → common row and cluster order
@@ -51,11 +105,13 @@ cell-level loadings
     → PDF and PNG
 ```
 
-### 1. Calculate cluster-mean loadings
+### 1. Prepare the cluster-mean inputs
 
-The EBMF cell-loading matrix is restricted to the 633,684 cells used in the RQVI analysis. Loadings are averaged within the 114 values of `Cluster_totalvi20240525rmigtsample_Res0.5`, producing `data/ebmf_mean_loadings_by_level2_cluster.csv` with shape 114 clusters × 200 EBMF factors.
+During upstream preprocessing, the EBMF cell-loading matrix was restricted to the 633,684 cells used in the RQVI analysis. Loadings were averaged within the 114 values of `Cluster_totalvi20240525rmigtsample_Res0.5`, producing the bundled file `data/ebmf_mean_loadings_by_level2_cluster.csv` with shape 114 clusters × 200 EBMF factors.
 
-The 114 × 256 cluster-mean RQVI matrices from 10 model runs are concatenated column-wise into `data/rqvi_multiseed_mean_loadings_by_level2_cluster.csv`, which has shape 114 × 2,560. The run and RQVI factor identifiers are retained in this source matrix for reproducibility, but they are not displayed in the figure.
+The 114 × 256 cluster-mean RQVI matrices from 10 model runs were concatenated column-wise into the bundled file `data/rqvi_multiseed_mean_loadings_by_level2_cluster.csv`, which has shape 114 × 2,560. Program identifiers and their run membership are stored in `data/rqvi_multiseed_candidate_metadata.csv`. These identifiers are retained for reproducibility but are not displayed in the figure.
+
+With `--recompute-matches`, the figure script starts from these repository files; it does not read cell-level data or any path outside the cloned repository.
 
 ### 2. Determine the 200 corresponding RQVI factors
 
@@ -87,6 +143,8 @@ The CSV row identifiers preserve factor correspondence for auditing, but the plo
 ### 5. Draw the figure
 
 The default plotting path reads only the two saved 200 × 114 display matrices and the cluster-order table. It does not recalculate correlations or factor matches. Both matrices are drawn with Matplotlib `imshow`, the sequential `Blues` colormap, `vmin=0`, `vmax=1`, automatic aspect ratio, and rasterized heatmap bodies. A shared horizontal colorbar reports `Relative loading`.
+
+The same plotting call also exports the EBMF heatmap, corresponding-RQVI heatmap, and shared colorbar as three standalone PDFs in `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/`. These subfigure assets use the same matrices, row order, column order, colors, and labels as the combined PDF; matching is not repeated during export.
 
 The figure contains no overall title, panel title, factor identifiers, cluster tick labels, correlation bars, or run/seed annotations. The only y-axis text is `EBMF factors` and `Corresponding RQVI factors`. Broad lineage labels are shown above the matrices to match the visual organization of Figure 1C; a lineage spanning fewer than four columns remains visible in the color strip but is not labeled to prevent overlap.
 

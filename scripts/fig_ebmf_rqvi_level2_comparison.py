@@ -2,7 +2,8 @@
 
 By default, the script reads the two saved 200 x 114 display matrices and only
 renders the figure. Pass --recompute-matches to rebuild the one-to-one matching
-and the display matrices from the raw cluster-mean inputs before plotting.
+and the display matrices from the repository's cluster-mean inputs before
+plotting.
 
 The 256 RQVI programs from each of 10 random seeds are treated as 2,560
 seed-specific candidates.  A maximum-weight bipartite assignment then pairs
@@ -13,7 +14,7 @@ clusters.  The displayed RQVI heatmap contains exactly those 200 matches.
 Values are z-scored within each program across clusters for matching. For the
 heatmaps, every program is scaled to the interval [0, 1] across clusters so the
 display follows the loading-matrix style of Figure 1C. Raw arithmetic cluster
-means are exported separately.
+means are stored separately in the repository.
 """
 
 from __future__ import annotations
@@ -32,38 +33,42 @@ from scipy.cluster.hierarchy import leaves_list, linkage
 from scipy.optimize import linear_sum_assignment
 
 
-PROJECT_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_EBMF_MEANS = PROJECT_DIR / "data" / "ebmf_mean_loadings_by_level2_cluster.csv"
-DEFAULT_RQVI_TEMPLATE = (
-    "/homes/gws/tianzew/projects/gene_program_model/Evaluation/"
-    "function_analysis/corr_rst/rqvi_seed{seed}_gp_cell_level.csv"
-)
-DEFAULT_CLUSTER_ORDER = PROJECT_DIR / "data" / "rqvi_seed0_level2_heatmap_cluster_order.csv"
+# All default inputs and outputs are anchored to the cloned repository root.
+# No default path depends on a user name, home directory, or current directory.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_EBMF_MEANS = REPO_ROOT / "data" / "ebmf_mean_loadings_by_level2_cluster.csv"
+DEFAULT_CLUSTER_ORDER = REPO_ROOT / "data" / "rqvi_seed0_level2_heatmap_cluster_order.csv"
 DEFAULT_MATCHES = (
-    PROJECT_DIR / "data" / "ebmf_rqvi_multiseed_level2_one_to_one_matches.csv"
+    REPO_ROOT / "data" / "ebmf_rqvi_multiseed_level2_one_to_one_matches.csv"
 )
 DEFAULT_SEED_SUMMARY = (
-    PROJECT_DIR / "data" / "ebmf_rqvi_multiseed_one_to_one_seed_summary.csv"
+    REPO_ROOT / "data" / "ebmf_rqvi_multiseed_one_to_one_seed_summary.csv"
 )
 DEFAULT_POOLED_RQVI_MEANS = (
-    PROJECT_DIR / "data" / "rqvi_multiseed_mean_loadings_by_level2_cluster.csv"
+    REPO_ROOT / "data" / "rqvi_multiseed_mean_loadings_by_level2_cluster.csv"
 )
 DEFAULT_RQVI_CANDIDATE_METADATA = (
-    PROJECT_DIR / "data" / "rqvi_multiseed_candidate_metadata.csv"
+    REPO_ROOT / "data" / "rqvi_multiseed_candidate_metadata.csv"
 )
 DEFAULT_EBMF_SCALED = (
-    PROJECT_DIR / "data" / "ebmf_level2_scaled_loadings_for_comparison.csv"
+    REPO_ROOT / "data" / "ebmf_level2_scaled_loadings_for_comparison.csv"
 )
 DEFAULT_MATCHED_RQVI_SCALED = (
-    PROJECT_DIR
+    REPO_ROOT
     / "data"
     / "matched_rqvi_multiseed_level2_scaled_loadings_for_comparison.csv"
 )
 DEFAULT_PDF = (
-    PROJECT_DIR / "figures" / "main_figures" / "ebmf_rqvi_level2_comparison.pdf"
+    REPO_ROOT / "figures" / "main_figures" / "ebmf_rqvi_level2_comparison.pdf"
 )
 DEFAULT_PNG = (
-    PROJECT_DIR / "figures" / "main_figures" / "ebmf_rqvi_level2_comparison.png"
+    REPO_ROOT / "figures" / "main_figures" / "ebmf_rqvi_level2_comparison.png"
+)
+DEFAULT_SUBFIGURE_DIR = (
+    REPO_ROOT
+    / "figures"
+    / "main_figures"
+    / "ebmf_rqvi_level2_comparison_subfigures"
 )
 
 LEVEL1_COLORS = {
@@ -99,11 +104,6 @@ def _scale_columns_to_unit_interval(df: pd.DataFrame) -> pd.DataFrame:
         values[:, informative] - minima[:, informative]
     ) / ranges[:, informative]
     return pd.DataFrame(scaled, index=df.index, columns=df.columns)
-
-
-def _canonical_gp_label(value: object) -> str:
-    label = str(value)
-    return label if label.startswith("GP") else f"GP{label}"
 
 
 def _group_spans(lineages: list[str]) -> list[tuple[str, int, int]]:
@@ -161,13 +161,7 @@ def _style_heatmap(
         spine.set_linewidth(0.55)
 
 
-def _plot(
-    ebmf_plot: np.ndarray,
-    rqvi_plot: np.ndarray,
-    cluster_lineages: list[str],
-    output_pdf: Path,
-    output_png: Path,
-) -> None:
+def _set_plot_style() -> None:
     plt.rcParams.update(
         {
             "font.family": "DejaVu Sans",
@@ -178,6 +172,113 @@ def _plot(
             "savefig.dpi": 300,
         }
     )
+
+
+def _plot_heatmap_subfigure(
+    matrix: np.ndarray,
+    cluster_lineages: list[str],
+    ylabel: str,
+    ylabel_on_right: bool,
+    output_pdf: Path,
+) -> None:
+    """Export one heatmap as a standalone manuscript subfigure."""
+    _set_plot_style()
+    cmap = plt.get_cmap("Blues")
+    norm = mcolors.Normalize(vmin=0.0, vmax=1.0)
+    spans = _group_spans(cluster_lineages)
+
+    fig = plt.figure(figsize=(5.1, 7.8), facecolor="white")
+    grid = fig.add_gridspec(
+        2,
+        1,
+        height_ratios=[0.18, 7.6],
+        hspace=0.02,
+    )
+    ax_strip = fig.add_subplot(grid[0, 0])
+    ax_heatmap = fig.add_subplot(grid[1, 0])
+
+    _draw_lineage_strip(ax_strip, cluster_lineages, spans)
+    ax_heatmap.imshow(
+        matrix,
+        aspect="auto",
+        interpolation="none",
+        cmap=cmap,
+        norm=norm,
+        rasterized=True,
+    )
+    _style_heatmap(ax_heatmap, spans)
+    ax_heatmap.set_ylabel(ylabel, fontsize=10, labelpad=8)
+    if ylabel_on_right:
+        ax_heatmap.yaxis.set_label_position("right")
+
+    if ylabel_on_right:
+        fig.subplots_adjust(left=0.04, right=0.86, top=0.95, bottom=0.04)
+    else:
+        fig.subplots_adjust(left=0.14, right=0.96, top=0.95, bottom=0.04)
+    output_pdf.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_pdf, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
+def _plot_shared_colorbar(output_pdf: Path) -> None:
+    """Export the common loading scale for use below the two subfigures."""
+    _set_plot_style()
+    cmap = plt.get_cmap("Blues")
+    norm = mcolors.Normalize(vmin=0.0, vmax=1.0)
+    scalar_mappable = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+
+    fig = plt.figure(figsize=(2.1, 0.48), facecolor="white")
+    colorbar_axis = fig.add_axes([0.08, 0.54, 0.84, 0.27])
+    colorbar = fig.colorbar(
+        scalar_mappable,
+        cax=colorbar_axis,
+        orientation="horizontal",
+        ticks=[0.0, 0.5, 1.0],
+    )
+    colorbar.set_label("Relative loading", fontsize=8, labelpad=2)
+    colorbar.ax.tick_params(labelsize=7, length=2, pad=1)
+    colorbar.outline.set_linewidth(0.45)
+
+    output_pdf.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(output_pdf, dpi=300, bbox_inches="tight", pad_inches=0.02)
+    plt.close(fig)
+
+
+def _plot_subfigures(
+    ebmf_plot: np.ndarray,
+    rqvi_plot: np.ndarray,
+    cluster_lineages: list[str],
+    output_dir: Path,
+) -> tuple[Path, Path, Path]:
+    ebmf_pdf = output_dir / "panel_A_ebmf_factors.pdf"
+    rqvi_pdf = output_dir / "panel_B_corresponding_rqvi_factors.pdf"
+    colorbar_pdf = output_dir / "shared_relative_loading_colorbar.pdf"
+    _plot_heatmap_subfigure(
+        matrix=ebmf_plot,
+        cluster_lineages=cluster_lineages,
+        ylabel="EBMF factors",
+        ylabel_on_right=False,
+        output_pdf=ebmf_pdf,
+    )
+    _plot_heatmap_subfigure(
+        matrix=rqvi_plot,
+        cluster_lineages=cluster_lineages,
+        ylabel="Corresponding RQVI factors",
+        ylabel_on_right=True,
+        output_pdf=rqvi_pdf,
+    )
+    _plot_shared_colorbar(colorbar_pdf)
+    return ebmf_pdf, rqvi_pdf, colorbar_pdf
+
+
+def _plot(
+    ebmf_plot: np.ndarray,
+    rqvi_plot: np.ndarray,
+    cluster_lineages: list[str],
+    output_pdf: Path,
+    output_png: Path,
+) -> None:
+    _set_plot_style()
     cmap = plt.get_cmap("Blues")
     norm = mcolors.Normalize(vmin=0.0, vmax=1.0)
 
@@ -245,19 +346,16 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ebmf-means", type=Path, default=DEFAULT_EBMF_MEANS)
     parser.add_argument(
-        "--rqvi-means-template",
-        default=DEFAULT_RQVI_TEMPLATE,
-        help="Path template containing {seed} for RQVI cluster-mean CSVs.",
+        "--rqvi-means",
+        type=Path,
+        default=DEFAULT_POOLED_RQVI_MEANS,
+        help="Pooled RQVI cluster-mean CSV from all model runs.",
     )
-    parser.add_argument("--n-seeds", type=int, default=10)
     parser.add_argument("--cluster-order", type=Path, default=DEFAULT_CLUSTER_ORDER)
     parser.add_argument("--matches-output", type=Path, default=DEFAULT_MATCHES)
     parser.add_argument("--seed-summary-output", type=Path, default=DEFAULT_SEED_SUMMARY)
     parser.add_argument(
-        "--pooled-rqvi-means-output", type=Path, default=DEFAULT_POOLED_RQVI_MEANS
-    )
-    parser.add_argument(
-        "--rqvi-candidate-metadata-output",
+        "--rqvi-candidate-metadata",
         type=Path,
         default=DEFAULT_RQVI_CANDIDATE_METADATA,
     )
@@ -271,6 +369,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--pdf-output", type=Path, default=DEFAULT_PDF)
     parser.add_argument("--png-output", type=Path, default=DEFAULT_PNG)
+    parser.add_argument(
+        "--subfigure-dir",
+        type=Path,
+        default=DEFAULT_SUBFIGURE_DIR,
+        help="Directory for standalone EBMF, RQVI, and shared-colorbar PDFs.",
+    )
     parser.add_argument(
         "--recompute-matches",
         action="store_true",
@@ -335,18 +439,26 @@ def main() -> None:
             output_pdf=args.pdf_output,
             output_png=args.png_output,
         )
+        subfigure_paths = _plot_subfigures(
+            ebmf_plot=ebmf_display.to_numpy(dtype=np.float64),
+            rqvi_plot=rqvi_display.to_numpy(dtype=np.float64),
+            cluster_lineages=cluster_lineages,
+            output_dir=args.subfigure_dir,
+        )
         print(f"Loaded saved EBMF display matrix: {args.ebmf_scaled_output}")
         print(f"Loaded saved RQVI display matrix: {args.matched_rqvi_scaled_output}")
         print(f"Saved comparison PDF: {args.pdf_output}")
         print(f"Saved comparison PNG: {args.png_output}")
+        print(f"Saved subfigure PDFs: {', '.join(map(str, subfigure_paths))}")
         return
 
-    if args.n_seeds <= 0:
-        raise ValueError("--n-seeds must be positive")
-    if "{seed}" not in args.rqvi_means_template:
-        raise ValueError("--rqvi-means-template must contain {seed}")
-    if not args.ebmf_means.exists():
-        raise FileNotFoundError(args.ebmf_means)
+    for input_path in (
+        args.ebmf_means,
+        args.rqvi_means,
+        args.rqvi_candidate_metadata,
+    ):
+        if not input_path.exists():
+            raise FileNotFoundError(input_path)
 
     ebmf_raw = pd.read_csv(args.ebmf_means, index_col="level2_cluster")
     if set(cluster_labels) != set(ebmf_raw.index.astype(str)):
@@ -362,48 +474,43 @@ def main() -> None:
         bad = ebmf_raw.columns[~ebmf_informative].tolist()
         raise ValueError(f"EBMF factors with constant cluster profile: {bad}")
 
-    rqvi_raw_frames: list[pd.DataFrame] = []
-    rqvi_z_frames: list[pd.DataFrame] = []
-    candidate_metadata: list[dict[str, object]] = []
-    for seed in range(args.n_seeds):
-        path = Path(args.rqvi_means_template.format(seed=seed))
-        if not path.exists():
-            raise FileNotFoundError(path)
-        raw = pd.read_csv(path, index_col=0)
-        raw.index = raw.index.astype(str)
-        if set(cluster_labels) != set(raw.index):
-            raise ValueError(f"RQVI seed {seed} does not contain the same clusters")
-        raw = raw.loc[cluster_labels]
+    rqvi_raw = pd.read_csv(args.rqvi_means, index_col="level2_cluster")
+    rqvi_raw.index = rqvi_raw.index.astype(str)
+    if set(cluster_labels) != set(rqvi_raw.index):
+        raise ValueError("RQVI means and display-order files contain different clusters")
+    rqvi_raw = rqvi_raw.loc[cluster_labels]
+    rqvi_raw.columns = rqvi_raw.columns.astype(str)
 
-        gp_labels = [_canonical_gp_label(value) for value in raw.columns]
-        candidate_labels = [f"seed{seed}:{gp}" for gp in gp_labels]
-        raw.columns = candidate_labels
-        z, informative = _zscore_columns(raw)
-        rqvi_raw_frames.append(raw)
-        rqvi_z_frames.append(z)
-        candidate_metadata.extend(
-            {
-                "rqvi_candidate": candidate,
-                "rqvi_seed": seed,
-                "rqvi_gp": gp,
-                "informative": bool(is_informative),
-            }
-            for candidate, gp, is_informative in zip(
-                candidate_labels, gp_labels, informative
-            )
-        )
-
-    rqvi_raw = pd.concat(rqvi_raw_frames, axis=1)
-    rqvi_z = pd.concat(rqvi_z_frames, axis=1)
-    candidate_info = pd.DataFrame(candidate_metadata).set_index("rqvi_candidate")
+    candidate_info = pd.read_csv(args.rqvi_candidate_metadata)
+    required_metadata = {"rqvi_candidate", "rqvi_seed", "rqvi_gp", "informative"}
+    if not required_metadata.issubset(candidate_info.columns):
+        missing = required_metadata - set(candidate_info.columns)
+        raise ValueError(f"RQVI candidate metadata is missing {missing}")
+    candidate_info["rqvi_candidate"] = candidate_info["rqvi_candidate"].astype(str)
+    if candidate_info["rqvi_candidate"].duplicated().any():
+        raise ValueError("RQVI candidate metadata contains duplicate candidate labels")
+    candidate_info = candidate_info.set_index("rqvi_candidate")
     if not rqvi_raw.columns.is_unique:
         raise ValueError("Pooled seed-specific RQVI candidate labels are not unique")
+    if set(rqvi_raw.columns) != set(candidate_info.index):
+        raise ValueError("RQVI means and candidate metadata contain different candidates")
+    candidate_info = candidate_info.loc[rqvi_raw.columns]
+    rqvi_z, informative = _zscore_columns(rqvi_raw)
+    metadata_informative = (
+        candidate_info["informative"]
+        .astype(str)
+        .str.lower()
+        .map({"true": True, "false": False})
+    )
+    if metadata_informative.isna().any():
+        raise ValueError("RQVI candidate metadata has invalid informative values")
+    if not np.array_equal(metadata_informative.to_numpy(bool), informative):
+        raise ValueError("RQVI informative flags do not match the pooled mean matrix")
     if rqvi_raw.shape[1] < ebmf_raw.shape[1]:
         raise ValueError("Fewer RQVI candidates than EBMF factors")
 
     n_clusters = len(cluster_labels)
     correlation_matrix = ebmf_z.to_numpy().T @ rqvi_z.to_numpy() / n_clusters
-    informative = candidate_info.loc[rqvi_raw.columns, "informative"].to_numpy(bool)
     correlation_matrix[:, ~informative] = -np.inf
 
     finite_for_assignment = np.where(np.isfinite(correlation_matrix), correlation_matrix, -1e9)
@@ -465,27 +572,23 @@ def main() -> None:
         }
     )
 
+    seed_values = sorted(candidate_info["rqvi_seed"].astype(int).unique())
     seed_summary = (
         matches.groupby("rqvi_seed", sort=True)["pearson_r_level2_one_to_one"]
         .agg(selected_matches="size", median_r="median", mean_r="mean", min_r="min", max_r="max")
-        .reindex(range(args.n_seeds), fill_value=0)
+        .reindex(seed_values, fill_value=0)
         .reset_index()
     )
 
     for output in (
         args.matches_output,
         args.seed_summary_output,
-        args.pooled_rqvi_means_output,
-        args.rqvi_candidate_metadata_output,
         args.ebmf_scaled_output,
         args.matched_rqvi_scaled_output,
     ):
         output.parent.mkdir(parents=True, exist_ok=True)
     matches.to_csv(args.matches_output, index=False, float_format="%.17g")
     seed_summary.to_csv(args.seed_summary_output, index=False, float_format="%.17g")
-    rqvi_raw.index.name = "level2_cluster"
-    rqvi_raw.to_csv(args.pooled_rqvi_means_output, float_format="%.17g")
-    candidate_info.reset_index().to_csv(args.rqvi_candidate_metadata_output, index=False)
 
     ebmf_scaled_display = pd.DataFrame(
         ebmf_plot,
@@ -515,11 +618,17 @@ def main() -> None:
         output_pdf=args.pdf_output,
         output_png=args.png_output,
     )
+    subfigure_paths = _plot_subfigures(
+        ebmf_plot=ebmf_plot,
+        rqvi_plot=rqvi_plot,
+        cluster_lineages=cluster_lineages,
+        output_dir=args.subfigure_dir,
+    )
 
     print(f"Saved one-to-one match table: {args.matches_output}")
     print(f"Saved selected-seed summary: {args.seed_summary_output}")
-    print(f"Saved pooled raw RQVI cluster means: {args.pooled_rqvi_means_output}")
-    print(f"Saved RQVI candidate metadata: {args.rqvi_candidate_metadata_output}")
+    print(f"Loaded pooled raw RQVI cluster means: {args.rqvi_means}")
+    print(f"Loaded RQVI candidate metadata: {args.rqvi_candidate_metadata}")
     print(f"Saved displayed EBMF scaled loadings: {args.ebmf_scaled_output}")
     print(
         "Saved displayed matched-RQVI scaled loadings: "
@@ -527,8 +636,9 @@ def main() -> None:
     )
     print(f"Saved comparison PDF: {args.pdf_output}")
     print(f"Saved comparison PNG: {args.png_output}")
+    print(f"Saved subfigure PDFs: {', '.join(map(str, subfigure_paths))}")
     print(
-        f"Pooled {args.n_seeds}-seed one-to-one matches: "
+        f"Pooled {len(seed_values)}-run one-to-one matches: "
         f"median r={np.median(assigned_correlations):.6f}; "
         f"mean r={np.mean(assigned_correlations):.6f}; "
         f"range={np.min(assigned_correlations):.6f}–{np.max(assigned_correlations):.6f}; "
