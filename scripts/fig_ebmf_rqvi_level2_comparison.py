@@ -59,15 +59,15 @@ DEFAULT_MATCHED_RQVI_SCALED = (
     / "matched_rqvi_multiseed_level2_scaled_loadings_for_comparison.csv"
 )
 DEFAULT_PDF = (
-    REPO_ROOT / "figures" / "main_figures" / "ebmf_rqvi_level2_comparison.pdf"
+    REPO_ROOT / "figures" / "sup_figures" / "ebmf_rqvi_level2_comparison.pdf"
 )
 DEFAULT_PNG = (
-    REPO_ROOT / "figures" / "main_figures" / "ebmf_rqvi_level2_comparison.png"
+    REPO_ROOT / "figures" / "sup_figures" / "ebmf_rqvi_level2_comparison.png"
 )
 DEFAULT_SUBFIGURE_DIR = (
     REPO_ROOT
     / "figures"
-    / "main_figures"
+    / "sup_figures"
     / "ebmf_rqvi_level2_comparison_subfigures"
 )
 

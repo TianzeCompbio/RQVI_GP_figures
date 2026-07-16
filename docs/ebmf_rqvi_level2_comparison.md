@@ -17,9 +17,9 @@ cd RQVI_GP_figures
 
 ### Where to find the figure
 
-The manuscript-ready combined figure is at `figures/main_figures/ebmf_rqvi_level2_comparison.pdf` ([open on GitHub](https://github.com/TianzeCompbio/RQVI_GP_figures/blob/main/figures/main_figures/ebmf_rqvi_level2_comparison.pdf)). Its PNG preview is at `figures/main_figures/ebmf_rqvi_level2_comparison.png`.
+The manuscript-ready supplementary figure is at `figures/sup_figures/ebmf_rqvi_level2_comparison.pdf` ([open on GitHub](https://github.com/TianzeCompbio/RQVI_GP_figures/blob/main/figures/sup_figures/ebmf_rqvi_level2_comparison.pdf)). Its PNG preview is at `figures/sup_figures/ebmf_rqvi_level2_comparison.png`.
 
-The separately exported EBMF panel, corresponding-RQVI panel, and shared colorbar are in `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/` ([browse on GitHub](https://github.com/TianzeCompbio/RQVI_GP_figures/tree/main/figures/main_figures/ebmf_rqvi_level2_comparison_subfigures)). The plotting and matching script is `scripts/fig_ebmf_rqvi_level2_comparison.py`.
+The separately exported EBMF panel, corresponding-RQVI panel, and shared colorbar are in `figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/` ([browse on GitHub](https://github.com/TianzeCompbio/RQVI_GP_figures/tree/main/figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures)). The plotting and matching script is `scripts/fig_ebmf_rqvi_level2_comparison.py`.
 
 ### Redraw from the saved plotting matrices
 
@@ -41,11 +41,11 @@ The recomputation inputs are `data/ebmf_mean_loadings_by_level2_cluster.csv`, `d
 
 ## Figure files
 
-- `figures/main_figures/ebmf_rqvi_level2_comparison.pdf`: manuscript-ready figure.
-- `figures/main_figures/ebmf_rqvi_level2_comparison.png`: 300-dpi preview.
-- `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_A_ebmf_factors.pdf`: standalone EBMF heatmap for use as the left subfigure.
-- `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_B_corresponding_rqvi_factors.pdf`: standalone corresponding-RQVI heatmap for use as the right subfigure.
-- `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/shared_relative_loading_colorbar.pdf`: shared color scale that can be centered below the two subfigures.
+- `figures/sup_figures/ebmf_rqvi_level2_comparison.pdf`: manuscript-ready supplementary figure.
+- `figures/sup_figures/ebmf_rqvi_level2_comparison.png`: 300-dpi preview.
+- `figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/panel_A_ebmf_factors.pdf`: standalone EBMF heatmap for use as the left panel.
+- `figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/panel_B_corresponding_rqvi_factors.pdf`: standalone corresponding-RQVI heatmap for use as the right panel.
+- `figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/shared_relative_loading_colorbar.pdf`: shared color scale that can be centered below the two panels.
 - `scripts/fig_ebmf_rqvi_level2_comparison.py`: complete plotting and matching code.
 
 The standalone PDFs do not contain internal panel letters or titles. Panel letters and the overall caption should be added by the manuscript layout so the same assets can be reused if their final panel positions change.
@@ -62,19 +62,19 @@ The following LaTeX places the two heatmaps in separate subfigure environments a
     \centering
     \begin{subfigure}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_A_ebmf_factors.pdf}
+        \includegraphics[width=\linewidth]{figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/panel_A_ebmf_factors.pdf}
         \caption{}
         \label{fig:ebmf-level2}
     \end{subfigure}
     \hfill
     \begin{subfigure}[t]{0.48\textwidth}
         \centering
-        \includegraphics[width=\linewidth]{figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/panel_B_corresponding_rqvi_factors.pdf}
+        \includegraphics[width=\linewidth]{figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/panel_B_corresponding_rqvi_factors.pdf}
         \caption{}
         \label{fig:rqvi-level2}
     \end{subfigure}
 
-    \includegraphics[width=0.20\textwidth]{figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/shared_relative_loading_colorbar.pdf}
+    \includegraphics[width=0.20\textwidth]{figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/shared_relative_loading_colorbar.pdf}
     \caption{Cluster-level activity profiles of corresponding EBMF and RQVI factors.}
     \label{fig:ebmf-rqvi-level2-comparison}
 \end{figure*}
@@ -144,7 +144,7 @@ The CSV row identifiers preserve factor correspondence for auditing, but the plo
 
 The default plotting path reads only the two saved 200 × 114 display matrices and the cluster-order table. It does not recalculate correlations or factor matches. Both matrices are drawn with Matplotlib `imshow`, the sequential `Blues` colormap, `vmin=0`, `vmax=1`, automatic aspect ratio, and rasterized heatmap bodies. A shared horizontal colorbar reports `Relative loading`.
 
-The same plotting call also exports the EBMF heatmap, corresponding-RQVI heatmap, and shared colorbar as three standalone PDFs in `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/`. These subfigure assets use the same matrices, row order, column order, colors, and labels as the combined PDF; matching is not repeated during export.
+The same plotting call also exports the EBMF heatmap, corresponding-RQVI heatmap, and shared colorbar as three standalone PDFs in `figures/sup_figures/ebmf_rqvi_level2_comparison_subfigures/`. These panel assets use the same matrices, row order, column order, colors, and labels as the combined PDF; matching is not repeated during export.
 
 The figure contains no overall title, panel title, factor identifiers, cluster tick labels, correlation bars, or run/seed annotations. The only y-axis text is `EBMF factors` and `Corresponding RQVI factors`. Broad lineage labels are shown above the matrices to match the visual organization of Figure 1C; a lineage spanning fewer than four columns remains visible in the color strip but is not labeled to prevent overlap.
 

@@ -22,7 +22,7 @@ figures_version_v2/
 | Correlation histogram | Best-match signed Pearson r distribution | `fig_hist_standalone.py` | `figures/hist_standalone.pdf` | [`docs/correlation_histogram.md`](docs/correlation_histogram.md) |
 | Pair GP45 vs F35 | UMAP + MD comparison (r=0.436) | `fig_pair_GP45_F35.py` | `figures/pair_GP45_F35.pdf` | [`docs/pair_GP45_F35.md`](docs/pair_GP45_F35.md) |
 | RQVI level2-cluster heatmap | Mean loading of all 256 RQVI GPs across 114 fine-grained clusters | `fig_rqvi_level2_cluster_heatmap.py` | `figures/main_figures/rqvi_level2_cluster_heatmap.pdf` | [`docs/rqvi_level2_cluster_heatmap.md`](docs/rqvi_level2_cluster_heatmap.md) |
-| Aligned EBMF–RQVI cluster comparison | 200 EBMF factors and 200 distinct matches from 10 pooled RQVI seeds across the same 114 clusters | `fig_ebmf_rqvi_level2_comparison.py` | Combined PDF plus `figures/main_figures/ebmf_rqvi_level2_comparison_subfigures/` | [`docs/ebmf_rqvi_level2_comparison.md`](docs/ebmf_rqvi_level2_comparison.md) |
+| Aligned EBMF–RQVI cluster comparison | 200 EBMF factors and 200 distinct matches from 10 pooled RQVI seeds across the same 114 clusters | `fig_ebmf_rqvi_level2_comparison.py` | `figures/sup_figures/ebmf_rqvi_level2_comparison.pdf` plus standalone panel assets | [`docs/ebmf_rqvi_level2_comparison.md`](docs/ebmf_rqvi_level2_comparison.md) |
 | Best-match 4 factors | Best-match RQVI GPs for 4 Flashier factors (UMAP + MD) | `fig_rqvi_best_match_4factors.py` | `figures/rqvi_best_match_4factors.png` (PNG; PDF too large at 6.7 MB) | — |
 | Coverage | Flashier GP coverage vs RQVI seeds | `fig_rqvi_flashier_coverage.py` | `figures/rqvi_flashier_coverage.pdf` | [`docs/coverage.md`](docs/coverage.md) |
 
@@ -65,7 +65,7 @@ python scripts/fig_gp_sparsity_scatter.py      # -> figures/gp_sparsity_scatter.
 python scripts/fig_hist_standalone.py           # -> figures/hist_standalone.pdf
 python scripts/fig_pair_GP45_F35.py            # -> figures/pair_GP45_F35.pdf
 python scripts/fig_rqvi_level2_cluster_heatmap.py # -> figures/main_figures/rqvi_level2_cluster_heatmap.pdf/.png + data CSVs
-python scripts/fig_ebmf_rqvi_level2_comparison.py # -> combined figure + standalone subfigure PDFs
+python scripts/fig_ebmf_rqvi_level2_comparison.py # -> figures/sup_figures/ combined figure + standalone panel PDFs
 python scripts/fig_rqvi_best_match_4factors.py # -> figures/rqvi_best_match_4factors.pdf (use .png version; PDF is 6.7 MB)
 python scripts/fig_rqvi_flashier_coverage.py   # -> figures/rqvi_flashier_coverage.pdf
 ```
